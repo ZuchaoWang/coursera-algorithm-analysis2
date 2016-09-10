@@ -33,13 +33,13 @@ describe('graph', () => {
 
     it('should be correct', () => {
       function _testOne(t) {
-        var g = Graph.makeGraphFromEdges(t),
+        var g = Graph.makeGraphFromWeightedEdges(t),
           spt = Graph.mstPrim(g);
-        return Graph.sumOfEdgeWeight(g, spt.nidx);
+        return Graph.sumOfEdgeWeight(g, spt.eindices);
       }
-      expect(_testOne(g1)).toBe(-236);
-      expect(_testOne(g2)).toBe(4);
-      expect(_testOne(g3)).toBe(16);
+      expect(_testOne(g1)).toBe(4);
+      expect(_testOne(g2)).toBe(16);
+      expect(_testOne(g3)).toBe(-236);
     });
   });
 });
