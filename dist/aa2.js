@@ -7,7 +7,7 @@
 		exports["aa2"] = factory(require("babel-polyfill"));
 	else
 		root["aa2"] = factory(root["babel-polyfill"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_5__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_3__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -60,7 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(4);
+	var _wcomptime = __webpack_require__(6);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
@@ -68,7 +68,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
-	var _clustering = __webpack_require__(2);
+	var _clustering = __webpack_require__(5);
 	
 	var _clustering2 = _interopRequireDefault(_clustering);
 	
@@ -93,9 +93,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 	
-	__webpack_require__(5);
+	__webpack_require__(3);
 	
-	var _unionfind = __webpack_require__(3);
+	var _unionfind = __webpack_require__(2);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
@@ -282,36 +282,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _graph = __webpack_require__(1);
-	
-	var _graph2 = _interopRequireDefault(_graph);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	exports.default = {
-	  maxSpacing: maxSpacing
-	};
-	
-	
-	function maxSpacing(g, k) {
-	  var spt = _graph2.default.mstKruskal(g),
-	      eindices = spt.eindices.slice(0).sort(function (a, b) {
-	    return g.es[b].props.w - g.es[a].props.w;
-	  });
-	  return g.es[eindices[k - 2]].props.w;
-	}
-	module.exports = exports['default'];
-
-/***/ },
-/* 3 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -362,7 +332,158 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
+
+/***/ },
 /* 4 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  toInt: toInt,
+	  toIntMutate2: toIntMutate2
+	};
+	
+	
+	function toInt(bits) {
+	  var n = bits.length,
+	      sum = 0;
+	  for (var i = 0; i < n; i++) {
+	    sum |= bits[i] << n - i - 1;
+	  }
+	  return sum;
+	}
+	
+	function toIntMutate2(bits) {
+	  var sum = toInt(bits),
+	      n = bits.length,
+	      mutated = [],
+	      tmp;
+	
+	  for (var i = 0; i < n; i++) {
+	    tmp = _mutate(sum, bits[i], i, n);
+	    mutated.push(tmp);
+	    for (var j = i + 1; j < n; j++) {
+	      mutated.push(_mutate(tmp, bits[j], j, n));
+	    }
+	  }
+	  return mutated;
+	}
+	
+	function _mutate(intRep, bitAtP, p, n) {
+	  if (bitAtP) {
+	    return intRep - (1 << n - p - 1);
+	  } else {
+	    return intRep + (1 << n - p - 1);
+	  }
+	}
+	module.exports = exports["default"];
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _graph = __webpack_require__(1);
+	
+	var _graph2 = _interopRequireDefault(_graph);
+	
+	var _bitcode = __webpack_require__(4);
+	
+	var _bitcode2 = _interopRequireDefault(_bitcode);
+	
+	var _unionfind = __webpack_require__(2);
+	
+	var _unionfind2 = _interopRequireDefault(_unionfind);
+	
+	__webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  maxSpacing: maxSpacing,
+	  bitcodeK2: bitcodeK2
+	};
+	
+	
+	function maxSpacing(g, k) {
+	  var spt = _graph2.default.mstKruskal(g),
+	      eindices = spt.eindices.slice(0).sort(function (a, b) {
+	    return g.es[b].props.w - g.es[a].props.w;
+	  });
+	  return g.es[eindices[k - 2]].props.w;
+	}
+	
+	function bitcodeK2(bitcodeArr) {
+	  var n = bitcodeArr.length,
+	      intReps = bitcodeArr.map(function (x) {
+	    return _bitcode2.default.toInt(x);
+	  }),
+	      unqIdx = [],
+	      intSeen = new Set(),
+	      i;
+	
+	  for (i = 0; i < n; i++) {
+	    if (!intSeen.has(intReps[i])) {
+	      intSeen.add(intReps[i]);
+	      unqIdx.push(i);
+	    }
+	  }
+	
+	  var unqBitcodeArr = unqIdx.map(function (i) {
+	    return bitcodeArr[i];
+	  }),
+	      unqIntReps = unqIdx.map(function (i) {
+	    return intReps[i];
+	  }),
+	      unqN = unqIdx.length;
+	
+	  var pos = new Map();
+	  for (i = 0; i < unqN; i++) {
+	    pos.set(unqIntReps[i], i);
+	  }
+	
+	  var uf = _unionfind2.default.init(unqN),
+	      intMutated,
+	      j,
+	      iroot,
+	      jroot;
+	  for (i = 0; i < unqN; i++) {
+	    intMutated = _bitcode2.default.toIntMutate2(unqBitcodeArr[i]);
+	    for (j = 0; j < intMutated.length; j++) {
+	      if (pos.has(intMutated[j])) {
+	        iroot = _unionfind2.default.find(uf, i);
+	        jroot = _unionfind2.default.find(uf, pos.get(intMutated[j]));
+	        if (iroot !== jroot) {
+	          _unionfind2.default.union(uf, iroot, jroot);
+	        }
+	      }
+	    }
+	  }
+	
+	  var unqRoot = new Set();
+	  for (i = 0; i < unqN; i++) {
+	    iroot = _unionfind2.default.find(uf, i);
+	    unqRoot.add(iroot);
+	  }
+	  return unqRoot.size;
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 6 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -405,12 +526,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return sum;
 	}
 	module.exports = exports["default"];
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_5__;
 
 /***/ }
 /******/ ])
