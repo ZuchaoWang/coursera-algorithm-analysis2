@@ -1,8 +1,10 @@
 import 'babel-polyfill';
+import UF from './unionfind';
 
 export default {
   makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
   mstPrim: mstPrim,
+  mstKruskal: mstKruskal,
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
@@ -108,6 +110,34 @@ function mstPrim(g) {
   return {
     nindices: Array.from(nvisited),
     eindices: evisited
+  };
+}
+
+function mstKruskal(g) {
+  var nn = g.ns.length,
+    uf = UF.init(nn),
+    eSorted = g.es.slice(0).sort((a, b) => a.props.w - b.props.w),
+    i;
+
+  var nindices = [];
+  for (i = 0; i < nn; i++) {
+    nindices.push(i);
+  }
+
+  var eindices = [];
+  for (i = 0; i < eSorted.length; i++) {
+    var e = eSorted[i],
+      fromRoot = UF.find(uf, e.from),
+      toRoot = UF.find(uf, e.to);
+    if (fromRoot !== toRoot) {
+      UF.union(uf, e.from, e.to);
+      eindices.push(e.idx);
+    }
+  }
+
+  return {
+    nindices: nindices,
+    eindices: eindices
   };
 }
 
