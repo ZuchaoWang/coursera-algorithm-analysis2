@@ -7,7 +7,7 @@
 		exports["aa2"] = factory(require("babel-polyfill"));
 	else
 		root["aa2"] = factory(root["babel-polyfill"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_5__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -60,7 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(2);
+	var _wcomptime = __webpack_require__(4);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
@@ -68,11 +68,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
+	var _clustering = __webpack_require__(2);
+	
+	var _clustering2 = _interopRequireDefault(_clustering);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
 	  wcomptime: _wcomptime2.default,
-	  graph: _graph2.default
+	  graph: _graph2.default,
+	  clustering: _clustering2.default
 	};
 	module.exports = exports['default'];
 
@@ -88,11 +93,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 	
-	__webpack_require__(3);
+	__webpack_require__(5);
+	
+	var _unionfind = __webpack_require__(3);
+	
+	var _unionfind2 = _interopRequireDefault(_unionfind);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
 	  makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
 	  mstPrim: mstPrim,
+	  mstKruskal: mstKruskal,
 	  sumOfEdgeWeight: sumOfEdgeWeight
 	};
 	
@@ -229,6 +241,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
+	function mstKruskal(g) {
+	  var nn = g.ns.length,
+	      uf = _unionfind2.default.init(nn),
+	      eSorted = g.es.slice(0).sort(function (a, b) {
+	    return a.props.w - b.props.w;
+	  }),
+	      i;
+	
+	  var nindices = [];
+	  for (i = 0; i < nn; i++) {
+	    nindices.push(i);
+	  }
+	
+	  var eindices = [];
+	  for (i = 0; i < eSorted.length; i++) {
+	    var e = eSorted[i],
+	        fromRoot = _unionfind2.default.find(uf, e.from),
+	        toRoot = _unionfind2.default.find(uf, e.to);
+	    if (fromRoot !== toRoot) {
+	      _unionfind2.default.union(uf, e.from, e.to);
+	      eindices.push(e.idx);
+	    }
+	  }
+	
+	  return {
+	    nindices: nindices,
+	    eindices: eindices
+	  };
+	}
+	
 	function sumOfEdgeWeight(g, eidices) {
 	  var sum = 0;
 	  for (var i = 0; i < eidices.length; i++) {
@@ -240,6 +282,87 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _graph = __webpack_require__(1);
+	
+	var _graph2 = _interopRequireDefault(_graph);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  maxSpacing: maxSpacing
+	};
+	
+	
+	function maxSpacing(g, k) {
+	  var spt = _graph2.default.mstKruskal(g),
+	      eindices = spt.eindices.slice(0).sort(function (a, b) {
+	    return g.es[b].props.w - g.es[a].props.w;
+	  });
+	  return g.es[eindices[k - 2]].props.w;
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  init: init,
+	  union: union,
+	  find: find
+	};
+	
+	
+	function init(n) {
+	  var parentArr = new Array(n),
+	      rankArr = new Array(n);
+	  for (var i = 0; i < n; i++) {
+	    parentArr[i] = i;
+	    rankArr[i] = 0;
+	  }
+	  return {
+	    parent: parentArr,
+	    rank: rankArr
+	  };
+	}
+	
+	function find(uf, i) {
+	  if (uf.parent[i] !== i) {
+	    uf.parent[i] = find(uf, uf.parent[i]);
+	  }
+	  return uf.parent[i];
+	}
+	
+	function union(uf, i, j) {
+	  var iroot = find(uf, i),
+	      jroot = find(uf, j);
+	
+	  if (uf.rank[iroot] < uf.rank[jroot]) {
+	    uf.parent[iroot] = jroot;
+	  } else if (uf.rank[iroot] > uf.rank[jroot]) {
+	    uf.parent[jroot] = iroot;
+	  } else {
+	    uf.parent[jroot] = iroot;
+	    uf.rank[iroot]++;
+	  }
+	}
+	module.exports = exports["default"];
+
+/***/ },
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -284,10 +407,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 3 */
+/* 5 */
 /***/ function(module, exports) {
 
-	module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
+	module.exports = __WEBPACK_EXTERNAL_MODULE_5__;
 
 /***/ }
 /******/ ])
