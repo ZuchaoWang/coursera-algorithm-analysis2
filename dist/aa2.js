@@ -7,7 +7,7 @@
 		exports["aa2"] = factory(require("babel-polyfill"));
 	else
 		root["aa2"] = factory(root["babel-polyfill"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -60,11 +60,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(6);
+	var _wcomptime = __webpack_require__(7);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
-	var _graph = __webpack_require__(1);
+	var _graph = __webpack_require__(2);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
@@ -72,17 +72,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _clustering2 = _interopRequireDefault(_clustering);
 	
+	var _knapsack = __webpack_require__(6);
+	
+	var _knapsack2 = _interopRequireDefault(_knapsack);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
 	  wcomptime: _wcomptime2.default,
 	  graph: _graph2.default,
-	  clustering: _clustering2.default
+	  clustering: _clustering2.default,
+	  knapsack: _knapsack2.default
 	};
 	module.exports = exports['default'];
 
 /***/ },
 /* 1 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
+
+/***/ },
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -93,9 +104,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 	
-	__webpack_require__(3);
+	__webpack_require__(1);
 	
-	var _unionfind = __webpack_require__(2);
+	var _unionfind = __webpack_require__(3);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
@@ -281,7 +292,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 2 */
+/* 3 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -330,12 +341,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 	module.exports = exports["default"];
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
 
 /***/ },
 /* 4 */
@@ -396,7 +401,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _graph = __webpack_require__(1);
+	var _graph = __webpack_require__(2);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
@@ -404,11 +409,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _bitcode2 = _interopRequireDefault(_bitcode);
 	
-	var _unionfind = __webpack_require__(2);
+	var _unionfind = __webpack_require__(3);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
-	__webpack_require__(3);
+	__webpack_require__(1);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -484,6 +489,76 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	__webpack_require__(1);
+	
+	exports.default = {
+	  knapsack: knapsack
+	};
+	
+	
+	function knapsack(totalWeight, vals, weights) {
+	  var stack = [{ n: vals.length, w: totalWeight, exclude: null, include: null }],
+	      cache = new Map();
+	
+	  while (stack.length) {
+	    var prob = stack.pop();
+	    if (prob.n === 0 || prob.w === 0) {
+	      cacheSet(cache, prob.n, prob.w, 0);
+	    } else if (prob.exclude == null) {
+	      if (cacheHas(cache, prob.n - 1, prob.w)) {
+	        prob.exclude = cacheGet(cache, prob.n - 1, prob.w);
+	        stack.push(prob);
+	      } else {
+	        stack.push(prob);
+	        stack.push({ n: prob.n - 1, w: prob.w, exclude: null, include: null });
+	      }
+	    } else if (prob.include == null) {
+	      if (prob.w < weights[prob.n - 1]) {
+	        prob.include = 0;
+	        stack.push(prob);
+	      } else if (cacheHas(cache, prob.n - 1, prob.w - weights[prob.n - 1])) {
+	        prob.include = cacheGet(cache, prob.n - 1, prob.w - weights[prob.n - 1]) + vals[prob.n - 1];
+	        stack.push(prob);
+	      } else {
+	        stack.push(prob);
+	        stack.push({ n: prob.n - 1, w: prob.w - weights[prob.n - 1], exclude: null, include: null });
+	      }
+	    } else {
+	      cacheSet(cache, prob.n, prob.w, Math.max(prob.include, prob.exclude));
+	    }
+	  }
+	
+	  return cacheGet(cache, vals.length, totalWeight);
+	}
+	
+	function cacheHas(cache, i, w) {
+	  return cache.has(i) && cache.get(i).has(w);
+	}
+	
+	function cacheSet(cache, i, w, v) {
+	  if (!cache.has(i)) {
+	    cache.set(i, new Map());
+	  }
+	  if (!cache.get(i).has(w)) {
+	    cache.get(i).set(w, v);
+	  }
+	}
+	
+	function cacheGet(cache, i, w) {
+	  return cache.get(i).get(w);
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
