@@ -7,6 +7,7 @@ export default {
   mstPrim: mstPrim,
   mstKruskal: mstKruskal,
   ssspDijkstra: ssspDijkstra,
+  ssspBellmanFord: ssspBellmanFord,
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
@@ -166,9 +167,9 @@ function ssspDijkstra(g, s) {
 
     // for all neighbours
     for (i = 0; i < g.ns[minNidx].outnbs.length; i++) {
-      var nb = g.ns[minNidx].outnbs[i],
-        nextNidx = nb.nidx,
-        nextEidx = nb.eidx;
+      var outnb = g.ns[minNidx].outnbs[i],
+        nextNidx = outnb.nidx,
+        nextEidx = outnb.eidx;
 
       if (disArray[nextNidx] == null) { // not done
         if (nfrontier.hasKey(nextNidx)) {
@@ -181,6 +182,45 @@ function ssspDijkstra(g, s) {
           nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
         }
       }
+    }
+  }
+
+  return disArray;
+}
+
+function ssspBellmanFord(g, s) {
+  var nn = g.ns.length,
+    prevDisArray = [],
+    disArray = new Array(nn),
+    i;
+
+  for (i = 0; i < nn; i++) {
+    disArray[i] = null;
+  }
+  disArray[s] = 0;
+
+  // n iterations
+  for (var k = 0; k < nn; k++) {
+    prevDisArray = disArray.slice(0);
+    // for all nodes
+    for (var curNidx = 0; curNidx < nn; curNidx++) {
+      if (prevDisArray[curNidx] != null) {
+        // for all neighbours
+        for (var j = 0; j < g.ns[curNidx].outnbs.length; j++) {
+          var outnb = g.ns[curNidx].outnbs[j],
+            nextNidx = outnb.nidx,
+            nextEidx = outnb.eidx;
+          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].props.w < disArray[nextNidx]) {
+            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].props.w;
+          }
+        }
+      }
+    }
+  }
+
+  for (i = 0; i < nn; i++) {
+    if (prevDisArray[i] !== disArray[i]) {
+      return null; // negative cycle detected
     }
   }
 
