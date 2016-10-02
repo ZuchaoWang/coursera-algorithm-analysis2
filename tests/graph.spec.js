@@ -37,7 +37,7 @@ describe('graph', () => {
 
     it('mstPrim should be correct', () => {
       function _testOne(t) {
-        var g = Graph.makeGraphFromWeightedEdges(t);
+        var g = Graph.makeGraphFromWeightedEdges(t, false);
         return Graph.mstPrim(g).sort((a, b) => a - b);
       }
       expect(_testOne(g1)).toEqual([0, 1, 4]);
@@ -47,7 +47,7 @@ describe('graph', () => {
 
     it('mstKruskal should be correct', () => {
       function _testOne(t) {
-        var g = Graph.makeGraphFromWeightedEdges(t);
+        var g = Graph.makeGraphFromWeightedEdges(t, false);
         return Graph.mstKruskal(g).sort((a, b) => a - b);
       }
       expect(_testOne(g1)).toEqual([0, 1, 4]);
@@ -82,7 +82,7 @@ describe('graph', () => {
 
     it('ssspDijkstra should be correct', () => {
       function _testOne(t) {
-        var g = Graph.makeGraphFromWeightedEdges(t);
+        var g = Graph.makeGraphFromWeightedEdges(t, true);
         return Graph.ssspDijkstra(g, 0);
       }
       expect(_testOne(g1)).toEqual([0, 1, 2, 3, 4, 4, 3, 2]);

@@ -10,7 +10,7 @@ export default {
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
-function makeGraphFromWeightedEdges(wedges) {
+function makeGraphFromWeightedEdges(wedges, directed = false) {
   var nn = 0,
     i;
   for (i = 0; i < wedges.length; i++) {
@@ -20,7 +20,11 @@ function makeGraphFromWeightedEdges(wedges) {
 
   var ns = new Array(nn);
   for (i = 0; i < nn; i++) {
-    ns[i] = { idx: i, nbs: [] };
+    if (directed) {
+      ns[i] = { idx: i, innbs: [], outnbs: [] };
+    } else {
+      ns[i] = { idx: i, nbs: [] };
+    }
   }
 
   var es = new Array(wedges.length);
@@ -33,17 +37,29 @@ function makeGraphFromWeightedEdges(wedges) {
         w: wedges[i].w
       }
     };
-    ns[wedges[i].from].nbs.push({
-      nidx: wedges[i].to,
-      eidx: i
-    });
-    ns[wedges[i].to].nbs.push({
-      nidx: wedges[i].from,
-      eidx: i
-    });
+    if (directed) {
+      ns[wedges[i].from].outnbs.push({
+        nidx: wedges[i].to,
+        eidx: i
+      });
+      ns[wedges[i].to].innbs.push({
+        nidx: wedges[i].from,
+        eidx: i
+      });
+    } else {
+      ns[wedges[i].from].nbs.push({
+        nidx: wedges[i].to,
+        eidx: i
+      });
+      ns[wedges[i].to].nbs.push({
+        nidx: wedges[i].from,
+        eidx: i
+      });
+    }
   }
 
   return {
+    directed: directed,
     ns: ns,
     es: es
   };
@@ -149,8 +165,8 @@ function ssspDijkstra(g, s) {
     }
 
     // for all neighbours
-    for (i = 0; i < g.ns[minNidx].nbs.length; i++) {
-      var nb = g.ns[minNidx].nbs[i],
+    for (i = 0; i < g.ns[minNidx].outnbs.length; i++) {
+      var nb = g.ns[minNidx].outnbs[i],
         nextNidx = nb.nidx,
         nextEidx = nb.eidx;
 
