@@ -16,7 +16,7 @@ var dataFilePath = path.resolve(__dirname, '../data/PrimEdges.txt'),
   });
 
 var g = makeGraphFromWeightedEdges(data),
-  spt = mstPrim(g),
-  sum = sumOfEdgeWeight(g, spt.eindices);
+  spte = mstPrim(g),
+  sum = sumOfEdgeWeight(g, spte);
 
 console.log('sum of weights:', sum);

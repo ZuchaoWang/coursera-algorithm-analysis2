@@ -6,6 +6,7 @@ export default {
   makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
   mstPrim: mstPrim,
   mstKruskal: mstKruskal,
+  ssspDijkstra: ssspDijkstra,
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
@@ -50,16 +51,13 @@ function makeGraphFromWeightedEdges(wedges) {
 
 function mstPrim(g) {
   if (g.ns.length === 0) {
-    return {
-      nindices: [],
-      eindices: []
-    };
+    return [];
   }
 
-  // nodes are in nvisited, or nfrontier (reachable but not visited), or neither (currently not reachable)
-  var nvisited = new Set(),
-    evisited = [],
-    nfrontier = new Heap((a, b) => a.w - b.w, a => a.nidx), // key: nidx, value: eidx (with least weight)
+  // nodes are in nadded, or nfrontier (reachable but not added), or neither (currently not reachable)
+  var nadded = new Set(),
+    eadded = [],
+    nfrontier = new Heap((a, b) => a.w - b.w, a => a.nidx), // nidx, eidx, w
     firstNode = true;
 
   while (firstNode || nfrontier.size() > 0) {
@@ -70,7 +68,7 @@ function mstPrim(g) {
       minNidx = 0;
 
       // record visited
-      nvisited.add(minNidx);
+      nadded.add(minNidx);
     } else {
       // choose min
       var minElem = nfrontier.pop(),
@@ -78,8 +76,8 @@ function mstPrim(g) {
       minNidx = minElem.nidx;
 
       // record visited
-      nvisited.add(minNidx);
-      evisited.push(minEidx);
+      nadded.add(minNidx);
+      eadded.push(minEidx);
     }
 
     // for all neighbours
@@ -88,8 +86,8 @@ function mstPrim(g) {
         nextNidx = nb.nidx,
         nextEidx = nb.eidx;
 
-      // restrict to unvisited neighbours
-      if (!nvisited.has(nextNidx)) {
+      // restrict to neighbours that are not added
+      if (!nadded.has(nextNidx)) {
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
           if (g.es[nextEidx].props.w < prevElem.w) {
@@ -103,38 +101,74 @@ function mstPrim(g) {
     }
   }
 
-  return {
-    nindices: Array.from(nvisited),
-    eindices: evisited
-  };
+  return eadded;
 }
 
 function mstKruskal(g) {
   var nn = g.ns.length,
     uf = UnionFind.init(nn),
-    eSorted = g.es.slice(0).sort((a, b) => a.props.w - b.props.w),
-    i;
+    eSorted = g.es.slice(0).sort((a, b) => a.props.w - b.props.w);
 
-  var nindices = [];
-  for (i = 0; i < nn; i++) {
-    nindices.push(i);
-  }
-
-  var eindices = [];
-  for (i = 0; i < eSorted.length; i++) {
+  var eadded = [];
+  for (var i = 0; i < eSorted.length; i++) {
     var e = eSorted[i],
       fromRoot = UnionFind.find(uf, e.from),
       toRoot = UnionFind.find(uf, e.to);
     if (fromRoot !== toRoot) {
       UnionFind.union(uf, e.from, e.to);
-      eindices.push(e.idx);
+      eadded.push(e.idx);
     }
   }
 
-  return {
-    nindices: nindices,
-    eindices: eindices
-  };
+  return eadded;
+}
+
+function ssspDijkstra(g, s) {
+  var nn = g.ns.length,
+    disArray = new Array(nn),
+    nfrontier = new Heap((a, b) => a.w - b.w, a => a.nidx), // nidx, eidx, w
+    firstNode = true,
+    i;
+
+  for (i = 0; i < nn; i++) {
+    disArray[i] = null;
+  }
+
+  while (firstNode || nfrontier.size() > 0) {
+    var minNidx;
+    if (firstNode) {
+      // start from s
+      firstNode = false;
+      minNidx = s;
+      disArray[minNidx] = 0;
+    } else {
+      // choose min
+      var minElem = nfrontier.pop();
+      minNidx = minElem.nidx;
+      disArray[minNidx] = minElem.w;
+    }
+
+    // for all neighbours
+    for (i = 0; i < g.ns[minNidx].nbs.length; i++) {
+      var nb = g.ns[minNidx].nbs[i],
+        nextNidx = nb.nidx,
+        nextEidx = nb.eidx;
+
+      if (disArray[nextNidx] == null) { // not done
+        if (nfrontier.hasKey(nextNidx)) {
+          var prevElem = nfrontier.getKey(nextNidx);
+          if (disArray[minNidx] + g.es[nextEidx].props.w < prevElem.w) {
+            nfrontier.popKey(nextNidx);
+            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+          }
+        } else {
+          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+        }
+      }
+    }
+  }
+
+  return disArray;
 }
 
 function sumOfEdgeWeight(g, eidices) {

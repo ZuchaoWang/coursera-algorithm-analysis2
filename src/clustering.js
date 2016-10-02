@@ -9,8 +9,8 @@ export default {
 };
 
 function maxSpacing(g, k) {
-  var spt = Graph.mstKruskal(g),
-    eindices = spt.eindices.slice(0).sort((a, b) => g.es[b].props.w - g.es[a].props.w);
+  var spte = Graph.mstKruskal(g),
+    eindices = spte.slice(0).sort((a, b) => g.es[b].props.w - g.es[a].props.w);
   return g.es[eindices[k - 2]].props.w;
 }
 
