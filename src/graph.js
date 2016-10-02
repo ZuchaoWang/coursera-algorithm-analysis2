@@ -1,5 +1,5 @@
 import 'babel-polyfill';
-import UF from './unionfind';
+import UnionFind from './unionfind';
 
 export default {
   makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
@@ -115,7 +115,7 @@ function mstPrim(g) {
 
 function mstKruskal(g) {
   var nn = g.ns.length,
-    uf = UF.init(nn),
+    uf = UnionFind.init(nn),
     eSorted = g.es.slice(0).sort((a, b) => a.props.w - b.props.w),
     i;
 
@@ -127,10 +127,10 @@ function mstKruskal(g) {
   var eindices = [];
   for (i = 0; i < eSorted.length; i++) {
     var e = eSorted[i],
-      fromRoot = UF.find(uf, e.from),
-      toRoot = UF.find(uf, e.to);
+      fromRoot = UnionFind.find(uf, e.from),
+      toRoot = UnionFind.find(uf, e.to);
     if (fromRoot !== toRoot) {
-      UF.union(uf, e.from, e.to);
+      UnionFind.union(uf, e.from, e.to);
       eindices.push(e.idx);
     }
   }

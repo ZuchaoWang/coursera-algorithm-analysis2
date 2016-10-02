@@ -7,7 +7,7 @@ describe('heap', () => {
       h.push(1);
       expect(h.toObject()).toEqual({
         arr: [1],
-        id2Pos: [
+        pos: [
           [1, 0]
         ]
       });
@@ -22,7 +22,7 @@ describe('heap', () => {
       h.push(4);
       expect(h.toObject()).toEqual({
         arr: [1, 3, 2, 4],
-        id2Pos: [
+        pos: [
           [1, 0],
           [3, 1],
           [2, 2],
@@ -40,7 +40,7 @@ describe('heap', () => {
       h.push(0);
       expect(h.toObject()).toEqual({
         arr: [0, 1, 2, 3],
-        id2Pos: [
+        pos: [
           [0, 0],
           [1, 1],
           [2, 2],
@@ -58,10 +58,10 @@ describe('heap', () => {
         [2, 2],
         [3, 3]
       ]));
-      h.pop();
+      expect(h.pop()).toEqual(0);
       expect(h.toObject()).toEqual({
         arr: [1, 3, 2],
-        id2Pos: [
+        pos: [
           [1, 0],
           [3, 1],
           [2, 2]
@@ -73,10 +73,10 @@ describe('heap', () => {
       var h = new Heap(undefined, undefined, [1], new Map([
         [1, 0]
       ]));
-      h.pop();
+      expect(h.pop()).toEqual(1);
       expect(h.toObject()).toEqual({
         arr: [],
-        id2Pos: []
+        pos: []
       });
     });
   });
@@ -122,76 +122,44 @@ describe('heap', () => {
     });
   });
 
-  describe('remove', () => {
+  describe('popKey', () => {
     it('should remove element', () => {
       var h = new Heap(undefined, undefined, [1, 3, 2], new Map([
         [1, 0],
         [3, 1],
         [2, 2]
       ]));
-      h.remove(3);
+      expect(h.popKey(3)).toEqual(3);
       expect(h.toObject()).toEqual({
         arr: [1, 2],
-        id2Pos: [
+        pos: [
           [1, 0],
           [2, 1]
         ]
       });
     });
 
-    it('should remove element by id', () => {
-      var h = new Heap(undefined, undefined, [1, 3, 2], new Map([
-        [1, 0],
-        [3, 1],
-        [2, 2]
-      ]));
-      h.remove(3, true);
-      expect(h.toObject()).toEqual({
-        arr: [1, 2],
-        id2Pos: [
-          [1, 0],
-          [2, 1]
-        ]
-      });
-    });
-
-    it('should remove the last element by id', () => {
+    it('should remove the last element', () => {
       var h = new Heap(undefined, undefined, [1], new Map([
         [1, 0]
       ]));
-      h.remove(1, true);
+      expect(h.popKey(1)).toEqual(1);
       expect(h.toObject()).toEqual({
         arr: [],
-        id2Pos: []
+        pos: []
       });
     });
 
-    it('should remove element, with custom idFunc', () => {
+    it('should remove element, with custom keyFunc', () => {
       var h = new Heap(undefined, a => a * a, [1, 3, 2], new Map([
         [1, 0],
         [9, 1],
         [4, 2]
       ]));
-      h.remove(3);
+      expect(h.popKey(9)).toEqual(3);
       expect(h.toObject()).toEqual({
         arr: [1, 2],
-        id2Pos: [
-          [1, 0],
-          [4, 1]
-        ]
-      });
-    });
-
-    it('should remove element by id, with custom idFunc', () => {
-      var h = new Heap(undefined, a => a * a, [1, 3, 2], new Map([
-        [1, 0],
-        [9, 1],
-        [4, 2]
-      ]));
-      h.remove(9, true);
-      expect(h.toObject()).toEqual({
-        arr: [1, 2],
-        id2Pos: [
+        pos: [
           [1, 0],
           [4, 1]
         ]

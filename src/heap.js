@@ -1,38 +1,38 @@
 import 'babel-polyfill';
 
 var dftCmpFunc = (a, b) => a - b,
-  dftIdFunc = a => a;
+  dftKeyFunc = a => a;
 
 export default class Heap {
-  constructor(cmpFunc = dftCmpFunc, idFunc = dftIdFunc, arr = [], id2Pos = new Map()) {
-    // input of arr and id2Pos are used merely for testing
+  constructor(cmpFunc = dftCmpFunc, keyFunc = dftKeyFunc, arr = [], pos = new Map()) {
+    // input of arr and pos are used merely for testing
     this._cmpFunc = cmpFunc;
-    this._idFunc = idFunc;
+    this._keyFunc = keyFunc;
     this._arr = arr;
-    this._id2Pos = id2Pos;
+    this._pos = pos;
   }
 
   clear() {
     this._arr = [];
-    this._id2Pos = new Map();
+    this._pos = new Map();
   }
 
   toObject() {
     return {
       arr: this._arr,
-      id2Pos: Array.from(this._id2Pos.entries()).sort((a, b) => a[1] - b[1])
+      pos: Array.from(this._pos.entries()).sort((a, b) => a[1] - b[1])
     };
   }
 
   push(x) {
     var arr = this._arr,
-      id2Pos = this._id2Pos;
+      pos = this._pos;
 
-    var xid = this._idFunc(x);
-    if (id2Pos.has(xid)) {
-      throw new Error(`heap push: id ${xid} already existed`);
+    var xkey = this._keyFunc(x);
+    if (pos.has(xkey)) {
+      throw new Error(`heap push: key ${xkey} already existed`);
     } else {
-      id2Pos.set(xid, arr.length);
+      pos.set(xkey, arr.length);
       arr.push(x);
       this.siftUp();
     }
@@ -40,15 +40,15 @@ export default class Heap {
 
   pop() {
     var arr = this._arr,
-      id2Pos = this._id2Pos,
-      idFunc = this._idFunc,
+      pos = this._pos,
+      keyFunc = this._keyFunc,
       n = arr.length;
     if (n === 0) {
       throw new Error(`heap pop: nothing to pop`);
     }
 
     var val = arr[0];
-    id2Pos.delete(idFunc(val));
+    pos.delete(keyFunc(val));
     if (n === 1) {
       arr.pop();
     } else {
@@ -67,23 +67,37 @@ export default class Heap {
     return arr[0];
   }
 
-  remove(x_or_xid, isId = false) {
+  popKey(xkey) {
     var arr = this._arr,
-      id2Pos = this._id2Pos,
-      idFunc = this._idFunc,
-      xid = isId ? x_or_xid : idFunc(x_or_xid);
+      pos = this._pos,
+      keyFunc = this._keyFunc;
 
-    if (!id2Pos.has(xid)) {
-      throw new Error(`heap remove: id ${xid} does not exist`);
+    if (!pos.has(xkey)) {
+      throw new Error(`heap popKey: key ${xkey} does not exist`);
     } else {
-      var cur = id2Pos.get(xid),
-        last = arr.length - 1;
-      id2Pos.set(idFunc(arr[last]), cur);
-      id2Pos.delete(xid);
+      var cur = pos.get(xkey),
+        last = arr.length - 1,
+        val = arr[cur];
+      pos.set(keyFunc(arr[last]), cur);
+      pos.delete(xkey);
       arr[cur] = arr[last];
       arr.pop();
       this.siftUp(cur);
       this.siftDown(cur);
+      return val;
+    }
+  }
+
+  hasKey(xkey) {
+    return this._pos.has(xkey);
+  }
+
+  getKey(xkey) {
+    var pos = this._pos;
+    if (!pos.has(xkey)) {
+      throw new Error(`heap getKey: key ${xkey} does not exist`);
+    } else {
+      return pos.get(xkey);
     }
   }
 
@@ -93,8 +107,8 @@ export default class Heap {
 
   siftUp(start = -1) {
     var arr = this._arr,
-      id2Pos = this._id2Pos,
-      idFunc = this._idFunc,
+      pos = this._pos,
+      keyFunc = this._keyFunc,
       cmpFunc = this._cmpFunc,
       cur = (start !== -1) ? start : arr.length - 1,
       parent;
@@ -102,8 +116,8 @@ export default class Heap {
     while (cur > 0) {
       parent = Math.floor((cur - 1) / 2);
       if (cmpFunc(arr[cur], arr[parent]) < 0) {
-        id2Pos.set(idFunc(arr[parent]), cur);
-        id2Pos.set(idFunc(arr[cur]), parent);
+        pos.set(keyFunc(arr[parent]), cur);
+        pos.set(keyFunc(arr[cur]), parent);
         [arr[parent], arr[cur]] = [arr[cur], arr[parent]];
         cur = parent;
       } else {
@@ -114,8 +128,8 @@ export default class Heap {
 
   siftDown(start = 0) {
     var arr = this._arr,
-      id2Pos = this._id2Pos,
-      idFunc = this._idFunc,
+      pos = this._pos,
+      keyFunc = this._keyFunc,
       n = this._arr.length,
       cur = start,
       cmpFunc = this._cmpFunc,
@@ -132,8 +146,8 @@ export default class Heap {
         sel = right;
       }
       if (sel !== cur) {
-        id2Pos.set(idFunc(arr[sel]), cur);
-        id2Pos.set(idFunc(arr[cur]), sel);
+        pos.set(keyFunc(arr[sel]), cur);
+        pos.set(keyFunc(arr[cur]), sel);
         [arr[sel], arr[cur]] = [arr[cur], arr[sel]];
         cur = sel;
       } else {
