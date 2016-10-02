@@ -69,6 +69,20 @@ describe('heap', () => {
       });
     });
 
+    it('should remove the second last element', () => {
+      var h = new Heap(undefined, undefined, [0, 1], new Map([
+        [0, 0],
+        [1, 1]
+      ]));
+      expect(h.pop()).toEqual(0);
+      expect(h.toObject()).toEqual({
+        arr: [1],
+        pos: [
+          [1, 0]
+        ]
+      });
+    });
+
     it('should remove the last element', () => {
       var h = new Heap(undefined, undefined, [1], new Map([
         [1, 0]
@@ -139,29 +153,59 @@ describe('heap', () => {
       });
     });
 
-    it('should remove the last element', () => {
-      var h = new Heap(undefined, undefined, [1], new Map([
+    it('should remove element, with custom keyFunc', () => {
+      var h = new Heap((a, b) => a.w - b.w, a => a.k, [{ k: 1, w: 1 }, { k: 3, w: 9 }, { k: 2, w: 4 }], new Map(
+        [
+          [1, 0],
+          [3, 1],
+          [2, 2]
+        ]));
+      expect(h.popKey(3)).toEqual({ k: 3, w: 9 });
+      expect(h.toObject()).toEqual({
+        arr: [{ k: 1, w: 1 }, { k: 2, w: 4 }],
+        pos: [
+          [1, 0],
+          [2, 1]
+        ]
+      });
+    });
+
+    it('should remove the last element, with custom keyFunc', () => {
+      var h = new Heap((a, b) => a.w - b.w, a => a.k, [{ k: 1, w: 1 }], new Map([
         [1, 0]
       ]));
-      expect(h.popKey(1)).toEqual(1);
+      expect(h.popKey(1)).toEqual({ k: 1, w: 1 });
       expect(h.toObject()).toEqual({
         arr: [],
         pos: []
       });
     });
 
-    it('should remove element, with custom keyFunc', () => {
-      var h = new Heap(undefined, a => a * a, [1, 3, 2], new Map([
+    it('should remove the tail element, with custom keyFunc', () => {
+      var h = new Heap((a, b) => a.w - b.w, a => a.k, [{ k: 1, w: 1 }, { k: 2, w: 4 }], new Map([
         [1, 0],
-        [9, 1],
-        [4, 2]
+        [2, 1]
       ]));
-      expect(h.popKey(9)).toEqual(3);
+      expect(h.popKey(2)).toEqual({ k: 2, w: 4 });
       expect(h.toObject()).toEqual({
-        arr: [1, 2],
+        arr: [{ k: 1, w: 1 }],
         pos: [
-          [1, 0],
-          [4, 1]
+          [1, 0]
+        ]
+      });
+    });
+  });
+
+  describe('getKey', () => {
+    it('should return element', () => {
+      var h = new Heap((a, b) => a.w - b.w, a => a.k, [{ k: 1, w: 1 }], new Map([
+        [1, 0]
+      ]));
+      expect(h.getKey(1)).toEqual({ k: 1, w: 1 });
+      expect(h.toObject()).toEqual({
+        arr: [{ k: 1, w: 1 }],
+        pos: [
+          [1, 0]
         ]
       });
     });

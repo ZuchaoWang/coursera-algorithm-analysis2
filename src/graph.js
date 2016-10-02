@@ -1,5 +1,6 @@
 import 'babel-polyfill';
 import UnionFind from './unionfind';
+import Heap from './heap';
 
 export default {
   makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
@@ -55,12 +56,13 @@ function mstPrim(g) {
     };
   }
 
+  // nodes are in nvisited, or nfrontier (reachable but not visited), or neither (currently not reachable)
   var nvisited = new Set(),
     evisited = [],
-    nfrontier = new Map(), // key: nidx, value: eidx (with least weight)
+    nfrontier = new Heap((a, b) => a.w - b.w, a => a.nidx), // key: nidx, value: eidx (with least weight)
     firstNode = true;
 
-  while (firstNode || nfrontier.size > 0) {
+  while (firstNode || nfrontier.size() > 0) {
     var minNidx;
     if (firstNode) {
       // choose first
@@ -71,20 +73,13 @@ function mstPrim(g) {
       nvisited.add(minNidx);
     } else {
       // choose min
-      var minEidx = null;
-      for (var [nidx, eidx] of nfrontier) {
-        if (minEidx == null || g.es[eidx].props.w < g.es[minEidx].props.w) {
-          minNidx = nidx;
-          minEidx = eidx;
-        }
-      }
+      var minElem = nfrontier.pop(),
+        minEidx = minElem.eidx;
+      minNidx = minElem.nidx;
 
       // record visited
       nvisited.add(minNidx);
       evisited.push(minEidx);
-
-      // update nfrontier
-      nfrontier.delete(minNidx);
     }
 
     // for all neighbours
@@ -95,13 +90,14 @@ function mstPrim(g) {
 
       // restrict to unvisited neighbours
       if (!nvisited.has(nextNidx)) {
-        if (nfrontier.has(nextNidx)) {
-          var prevEidx = nfrontier.get(nextNidx);
-          if (g.es[nextEidx].props.w < g.es[prevEidx].props.w) {
-            nfrontier.set(nextNidx, nextEidx);
+        if (nfrontier.hasKey(nextNidx)) {
+          var prevElem = nfrontier.getKey(nextNidx);
+          if (g.es[nextEidx].props.w < prevElem.w) {
+            nfrontier.popKey(nextNidx);
+            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
           }
         } else { // previously unreachable
-          nfrontier.set(nextNidx, nextEidx);
+          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
         }
       }
     }

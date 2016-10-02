@@ -53,6 +53,7 @@ export default class Heap {
       arr.pop();
     } else {
       arr[0] = arr.pop();
+      pos.set(keyFunc(arr[0]), 0);
       this.siftDown();
     }
     return val;
@@ -78,12 +79,16 @@ export default class Heap {
       var cur = pos.get(xkey),
         last = arr.length - 1,
         val = arr[cur];
-      pos.set(keyFunc(arr[last]), cur);
       pos.delete(xkey);
-      arr[cur] = arr[last];
-      arr.pop();
-      this.siftUp(cur);
-      this.siftDown(cur);
+      if (cur === last) {
+        arr.pop();
+      } else {
+        pos.set(keyFunc(arr[last]), cur);
+        arr[cur] = arr[last];
+        arr.pop();
+        this.siftUp(cur);
+        this.siftDown(cur);
+      }
       return val;
     }
   }
@@ -93,11 +98,12 @@ export default class Heap {
   }
 
   getKey(xkey) {
-    var pos = this._pos;
+    var arr = this._arr,
+      pos = this._pos;
     if (!pos.has(xkey)) {
       throw new Error(`heap getKey: key ${xkey} does not exist`);
     } else {
-      return pos.get(xkey);
+      return arr[pos.get(xkey)];
     }
   }
 
