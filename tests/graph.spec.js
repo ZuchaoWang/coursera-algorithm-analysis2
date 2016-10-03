@@ -53,6 +53,21 @@ describe('graph', () => {
       expect(_testOne(d.g8, 0)).toEqual([0, -5, -2, 2]);
     });
   });
+
+  describe('all pair shortest path (apsp)', () => {
+    it('apspJohnson should be correct', () => {
+      function _testOne(t, s) {
+        var g = Graph.makeGraphFromWeightedEdges(t, true);
+        return Graph.apspJohnson(g, s);
+      }
+
+      var d = genTestData();
+      expect(_testOne(d.g1, 0)).toEqual([[0, 1, 2, 3], [null, 0, 3, 2], [null, null, 0, 1], [null, null, null, 0]]);
+      expect(_testOne(d.g5, 0)).toEqual([[0, 8, 8, 6], [2, 0, 1, 8], [1, 9, 0, 7], [3, 11, 2, 0]]);
+      expect(_testOne(d.g6, 0)).toEqual(null);
+      expect(_testOne(d.g8, 0)).toEqual([[0, -5, -2, 2], [6, 0, 3, 8], [4, -2, 0, 5], [-1, -7, -4, 0]]);
+    });
+  });
 });
 
 function genTestData() {

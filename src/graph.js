@@ -4,10 +4,13 @@ import Heap from './heap';
 
 export default {
   makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
+  addDummySourceNode: addDummySourceNode,
+  clone: clone,
   mstPrim: mstPrim,
   mstKruskal: mstKruskal,
   ssspDijkstra: ssspDijkstra,
   ssspBellmanFord: ssspBellmanFord,
+  apspJohnson: apspJohnson,
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
@@ -61,6 +64,110 @@ function makeGraphFromWeightedEdges(wedges, directed = false) {
 
   return {
     directed: directed,
+    ns: ns,
+    es: es
+  };
+}
+
+function addDummySourceNode(g, props) {
+  var nn = g.ns.length,
+    en = g.es.length,
+    i;
+
+  if (g.directed) {
+    g.ns.push({
+      idx: nn,
+      innbs: [],
+      outnbs: []
+    });
+    for (i = 0; i < nn; i++) {
+      g.ns[nn].outnbs.push({
+        nidx: i,
+        eidx: en + i
+      });
+      g.ns[i].innbs.push({
+        nidx: nn,
+        eidx: en + i
+      });
+      g.es.push({
+        idx: en + i,
+        from: nn,
+        to: i,
+        props: Object.assign({}, props)
+      });
+    }
+  } else {
+    g.ns.push({
+      idx: nn,
+      nbs: []
+    });
+    for (i = 0; i < nn; i++) {
+      g.ns[nn].nbs.push({
+        nidx: i,
+        eidx: en + i
+      });
+      g.ns[i].nbs.push({
+        nidx: nn,
+        eidx: en + i
+      });
+      g.es.push({
+        idx: en + i,
+        from: nn,
+        to: i,
+        props: Object.assign({}, props)
+      });
+    }
+  }
+
+  return g;
+}
+
+function clone(g) {
+  var nn = g.ns.length,
+    en = g.es.length,
+    ns = new Array(nn),
+    es = new Array(en),
+    i, j;
+
+  if (g.directed) {
+    for (i = 0; i < nn; i++) {
+      ns[i] = { idx: i, innbs: [], outnbs: [] };
+      for (j = 0; j < g.ns[i].outnbs.length; j++) {
+        ns[i].outnbs.push({
+          nidx: g.ns[i].outnbs[j].nidx,
+          eidx: g.ns[i].outnbs[j].eidx
+        });
+      }
+      for (j = 0; j < g.ns[i].innbs.length; j++) {
+        ns[i].innbs.push({
+          nidx: g.ns[i].innbs[j].nidx,
+          eidx: g.ns[i].innbs[j].eidx
+        });
+      }
+    }
+  } else {
+    for (i = 0; i < nn; i++) {
+      ns[i] = { idx: i, nbs: [] };
+      for (j = 0; j < g.ns[i].nbs.length; j++) {
+        ns[i].nbs.push({
+          nidx: g.ns[i].nbs[j].nidx,
+          eidx: g.ns[i].nbs[j].eidx
+        });
+      }
+    }
+  }
+
+  for (i = 0; i < en; i++) {
+    es[i] = {
+      idx: i,
+      from: g.es[i].from,
+      to: g.es[i].to,
+      props: Object.assign({}, g.es[i].props) // props will be shallow copy
+    };
+  }
+
+  return {
+    directed: g.directed,
     ns: ns,
     es: es
   };
@@ -225,6 +332,44 @@ function ssspBellmanFord(g, s) {
   }
 
   return disArray;
+}
+
+function apspJohnson(g) {
+  // add dummy nodes
+  var gDummy = addDummySourceNode(clone(g), { w: 0 });
+
+  // calculate node weight
+  var nn = g.ns.length,
+    nodeWeights = ssspBellmanFord(gDummy, nn);
+  if (nodeWeights == null) {
+    return null; // negative cycle detected
+  }
+
+  // re-weighting each edge and make it non-negative
+  var gRW = clone(g),
+    i;
+  for (i = 0; i < gRW.es.length; i++) {
+    var edge = gRW.es[i];
+    edge.props.w = edge.props.w + nodeWeights[edge.from] - nodeWeights[edge.to];
+  }
+
+  // run dijkstra for each source
+  var disMatrix = new Array(nn);
+  for (i = 0; i < nn; i++) {
+    disMatrix[i] = ssspDijkstra(gRW, i);
+  }
+
+  // restore path length
+  var j;
+  for (i = 0; i < nn; i++) {
+    for (j = 0; j < nn; j++) {
+      if (disMatrix[i][j] != null) {
+        disMatrix[i][j] = disMatrix[i][j] - nodeWeights[i] + nodeWeights[j];
+      }
+    }
+  }
+
+  return disMatrix;
 }
 
 function sumOfEdgeWeight(g, eidices) {
