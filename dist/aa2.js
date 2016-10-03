@@ -60,7 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(7);
+	var _wcomptime = __webpack_require__(8);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
@@ -72,7 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _clustering2 = _interopRequireDefault(_clustering);
 	
-	var _knapsack = __webpack_require__(6);
+	var _knapsack = __webpack_require__(7);
 	
 	var _knapsack2 = _interopRequireDefault(_knapsack);
 	
@@ -102,25 +102,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-	
 	__webpack_require__(1);
 	
 	var _unionfind = __webpack_require__(3);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
+	var _heap = __webpack_require__(6);
+	
+	var _heap2 = _interopRequireDefault(_heap);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
 	  makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
+	  addDummySourceNode: addDummySourceNode,
+	  clone: clone,
 	  mstPrim: mstPrim,
 	  mstKruskal: mstKruskal,
+	  ssspDijkstra: ssspDijkstra,
+	  ssspBellmanFord: ssspBellmanFord,
+	  apspJohnson: apspJohnson,
 	  sumOfEdgeWeight: sumOfEdgeWeight
 	};
 	
 	
 	function makeGraphFromWeightedEdges(wedges) {
+	  var directed = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+	
 	  var nn = 0,
 	      i;
 	  for (i = 0; i < wedges.length; i++) {
@@ -130,7 +139,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  var ns = new Array(nn);
 	  for (i = 0; i < nn; i++) {
-	    ns[i] = { idx: i, nbs: [] };
+	    if (directed) {
+	      ns[i] = { idx: i, innbs: [], outnbs: [] };
+	    } else {
+	      ns[i] = { idx: i, nbs: [] };
+	    }
 	  }
 	
 	  var es = new Array(wedges.length);
@@ -143,17 +156,134 @@ return /******/ (function(modules) { // webpackBootstrap
 	        w: wedges[i].w
 	      }
 	    };
-	    ns[wedges[i].from].nbs.push({
-	      nidx: wedges[i].to,
-	      eidx: i
-	    });
-	    ns[wedges[i].to].nbs.push({
-	      nidx: wedges[i].from,
-	      eidx: i
-	    });
+	    if (directed) {
+	      ns[wedges[i].from].outnbs.push({
+	        nidx: wedges[i].to,
+	        eidx: i
+	      });
+	      ns[wedges[i].to].innbs.push({
+	        nidx: wedges[i].from,
+	        eidx: i
+	      });
+	    } else {
+	      ns[wedges[i].from].nbs.push({
+	        nidx: wedges[i].to,
+	        eidx: i
+	      });
+	      ns[wedges[i].to].nbs.push({
+	        nidx: wedges[i].from,
+	        eidx: i
+	      });
+	    }
 	  }
 	
 	  return {
+	    directed: directed,
+	    ns: ns,
+	    es: es
+	  };
+	}
+	
+	function addDummySourceNode(g, props) {
+	  var nn = g.ns.length,
+	      en = g.es.length,
+	      i;
+	
+	  if (g.directed) {
+	    g.ns.push({
+	      idx: nn,
+	      innbs: [],
+	      outnbs: []
+	    });
+	    for (i = 0; i < nn; i++) {
+	      g.ns[nn].outnbs.push({
+	        nidx: i,
+	        eidx: en + i
+	      });
+	      g.ns[i].innbs.push({
+	        nidx: nn,
+	        eidx: en + i
+	      });
+	      g.es.push({
+	        idx: en + i,
+	        from: nn,
+	        to: i,
+	        props: Object.assign({}, props)
+	      });
+	    }
+	  } else {
+	    g.ns.push({
+	      idx: nn,
+	      nbs: []
+	    });
+	    for (i = 0; i < nn; i++) {
+	      g.ns[nn].nbs.push({
+	        nidx: i,
+	        eidx: en + i
+	      });
+	      g.ns[i].nbs.push({
+	        nidx: nn,
+	        eidx: en + i
+	      });
+	      g.es.push({
+	        idx: en + i,
+	        from: nn,
+	        to: i,
+	        props: Object.assign({}, props)
+	      });
+	    }
+	  }
+	
+	  return g;
+	}
+	
+	function clone(g) {
+	  var nn = g.ns.length,
+	      en = g.es.length,
+	      ns = new Array(nn),
+	      es = new Array(en),
+	      i,
+	      j;
+	
+	  if (g.directed) {
+	    for (i = 0; i < nn; i++) {
+	      ns[i] = { idx: i, innbs: [], outnbs: [] };
+	      for (j = 0; j < g.ns[i].outnbs.length; j++) {
+	        ns[i].outnbs.push({
+	          nidx: g.ns[i].outnbs[j].nidx,
+	          eidx: g.ns[i].outnbs[j].eidx
+	        });
+	      }
+	      for (j = 0; j < g.ns[i].innbs.length; j++) {
+	        ns[i].innbs.push({
+	          nidx: g.ns[i].innbs[j].nidx,
+	          eidx: g.ns[i].innbs[j].eidx
+	        });
+	      }
+	    }
+	  } else {
+	    for (i = 0; i < nn; i++) {
+	      ns[i] = { idx: i, nbs: [] };
+	      for (j = 0; j < g.ns[i].nbs.length; j++) {
+	        ns[i].nbs.push({
+	          nidx: g.ns[i].nbs[j].nidx,
+	          eidx: g.ns[i].nbs[j].eidx
+	        });
+	      }
+	    }
+	  }
+	
+	  for (i = 0; i < en; i++) {
+	    es[i] = {
+	      idx: i,
+	      from: g.es[i].from,
+	      to: g.es[i].to,
+	      props: Object.assign({}, g.es[i].props) // props will be shallow copy
+	    };
+	  }
+	
+	  return {
+	    directed: g.directed,
 	    ns: ns,
 	    es: es
 	  };
@@ -161,19 +291,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function mstPrim(g) {
 	  if (g.ns.length === 0) {
-	    return {
-	      nindices: [],
-	      eindices: []
-	    };
+	    return [];
 	  }
 	
-	  var nvisited = new Set(),
-	      evisited = [],
-	      nfrontier = new Map(),
-	      // key: nidx, value: eidx (with least weight)
+	  // nodes are in nadded, or nfrontier (reachable but not added), or neither (currently not reachable)
+	  var nadded = new Set(),
+	      eadded = [],
+	      nfrontier = new _heap2.default(function (a, b) {
+	    return a.w - b.w;
+	  }, function (a) {
+	    return a.nidx;
+	  }),
+	      // nidx, eidx, w
 	  firstNode = true;
 	
-	  while (firstNode || nfrontier.size > 0) {
+	  while (firstNode || nfrontier.size() > 0) {
 	    var minNidx;
 	    if (firstNode) {
 	      // choose first
@@ -181,48 +313,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      minNidx = 0;
 	
 	      // record visited
-	      nvisited.add(minNidx);
+	      nadded.add(minNidx);
 	    } else {
 	      // choose min
-	      var minEidx = null;
-	      var _iteratorNormalCompletion = true;
-	      var _didIteratorError = false;
-	      var _iteratorError = undefined;
+	      var minElem = nfrontier.pop(),
+	          minEidx = minElem.eidx;
+	      minNidx = minElem.nidx;
 	
-	      try {
-	        for (var _iterator = nfrontier[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var _step$value = _slicedToArray(_step.value, 2);
-	
-	          var nidx = _step$value[0];
-	          var eidx = _step$value[1];
-	
-	          if (minEidx == null || g.es[eidx].props.w < g.es[minEidx].props.w) {
-	            minNidx = nidx;
-	            minEidx = eidx;
-	          }
-	        }
-	
-	        // record visited
-	      } catch (err) {
-	        _didIteratorError = true;
-	        _iteratorError = err;
-	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion && _iterator.return) {
-	            _iterator.return();
-	          }
-	        } finally {
-	          if (_didIteratorError) {
-	            throw _iteratorError;
-	          }
-	        }
-	      }
-	
-	      nvisited.add(minNidx);
-	      evisited.push(minEidx);
-	
-	      // update nfrontier
-	      nfrontier.delete(minNidx);
+	      // record visited
+	      nadded.add(minNidx);
+	      eadded.push(minEidx);
 	    }
 	
 	    // for all neighbours
@@ -231,25 +331,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	          nextNidx = nb.nidx,
 	          nextEidx = nb.eidx;
 	
-	      // restrict to unvisited neighbours
-	      if (!nvisited.has(nextNidx)) {
-	        if (nfrontier.has(nextNidx)) {
-	          var prevEidx = nfrontier.get(nextNidx);
-	          if (g.es[nextEidx].props.w < g.es[prevEidx].props.w) {
-	            nfrontier.set(nextNidx, nextEidx);
+	      // restrict to neighbours that are not added
+	      if (!nadded.has(nextNidx)) {
+	        if (nfrontier.hasKey(nextNidx)) {
+	          var prevElem = nfrontier.getKey(nextNidx);
+	          if (g.es[nextEidx].props.w < prevElem.w) {
+	            nfrontier.popKey(nextNidx);
+	            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
 	          }
 	        } else {
 	          // previously unreachable
-	          nfrontier.set(nextNidx, nextEidx);
+	          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
 	        }
 	      }
 	    }
 	  }
 	
-	  return {
-	    nindices: Array.from(nvisited),
-	    eindices: evisited
-	  };
+	  return eadded;
 	}
 	
 	function mstKruskal(g) {
@@ -257,29 +355,181 @@ return /******/ (function(modules) { // webpackBootstrap
 	      uf = _unionfind2.default.init(nn),
 	      eSorted = g.es.slice(0).sort(function (a, b) {
 	    return a.props.w - b.props.w;
-	  }),
-	      i;
+	  });
 	
-	  var nindices = [];
-	  for (i = 0; i < nn; i++) {
-	    nindices.push(i);
-	  }
-	
-	  var eindices = [];
-	  for (i = 0; i < eSorted.length; i++) {
+	  var eadded = [];
+	  for (var i = 0; i < eSorted.length; i++) {
 	    var e = eSorted[i],
 	        fromRoot = _unionfind2.default.find(uf, e.from),
 	        toRoot = _unionfind2.default.find(uf, e.to);
 	    if (fromRoot !== toRoot) {
 	      _unionfind2.default.union(uf, e.from, e.to);
-	      eindices.push(e.idx);
+	      eadded.push(e.idx);
 	    }
 	  }
 	
-	  return {
-	    nindices: nindices,
-	    eindices: eindices
-	  };
+	  return eadded;
+	}
+	
+	function ssspDijkstra(g, s) {
+	  var nn = g.ns.length,
+	      disArray = new Array(nn),
+	      nfrontier = new _heap2.default(function (a, b) {
+	    return a.w - b.w;
+	  }, function (a) {
+	    return a.nidx;
+	  }),
+	      // nidx, eidx, w
+	  firstNode = true,
+	      i;
+	
+	  for (i = 0; i < nn; i++) {
+	    disArray[i] = null;
+	  }
+	
+	  while (firstNode || nfrontier.size() > 0) {
+	    var minNidx;
+	    if (firstNode) {
+	      // start from s
+	      firstNode = false;
+	      minNidx = s;
+	      disArray[minNidx] = 0;
+	    } else {
+	      // choose min
+	      var minElem = nfrontier.pop();
+	      minNidx = minElem.nidx;
+	      disArray[minNidx] = minElem.w;
+	    }
+	
+	    // for all neighbours
+	    for (i = 0; i < g.ns[minNidx].outnbs.length; i++) {
+	      var outnb = g.ns[minNidx].outnbs[i],
+	          nextNidx = outnb.nidx,
+	          nextEidx = outnb.eidx;
+	
+	      if (disArray[nextNidx] == null) {
+	        // not done
+	        if (nfrontier.hasKey(nextNidx)) {
+	          var prevElem = nfrontier.getKey(nextNidx);
+	          if (disArray[minNidx] + g.es[nextEidx].props.w < prevElem.w) {
+	            nfrontier.popKey(nextNidx);
+	            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+	          }
+	        } else {
+	          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+	        }
+	      }
+	    }
+	  }
+	
+	  return disArray;
+	}
+	
+	function ssspBellmanFord(g, s) {
+	  var debug = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+	
+	  var nn = g.ns.length,
+	      prevDisArray = [],
+	      disArray = new Array(nn),
+	      i;
+	
+	  for (i = 0; i < nn; i++) {
+	    disArray[i] = null;
+	  }
+	  disArray[s] = 0;
+	
+	  // n iterations
+	  for (var k = 0; k < nn; k++) {
+	    prevDisArray = disArray.slice(0);
+	    // for all nodes
+	    for (var curNidx = 0; curNidx < nn; curNidx++) {
+	      if (prevDisArray[curNidx] != null) {
+	        // for all neighbours
+	        for (var j = 0; j < g.ns[curNidx].outnbs.length; j++) {
+	          var outnb = g.ns[curNidx].outnbs[j],
+	              nextNidx = outnb.nidx,
+	              nextEidx = outnb.eidx;
+	          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].props.w < disArray[nextNidx]) {
+	            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].props.w;
+	          }
+	        }
+	      }
+	    }
+	    if (debug && Math.floor((k + 1) * 100 / nn) > Math.floor(k * 100 / nn)) {
+	      console.log('ssspBellmanFord: completed ' + (k + 1) + '/' + nn + ' rounds');
+	    }
+	  }
+	
+	  for (i = 0; i < nn; i++) {
+	    if (prevDisArray[i] !== disArray[i]) {
+	      return null; // negative cycle detected
+	    }
+	  }
+	
+	  return disArray;
+	}
+	
+	function apspJohnson(g) {
+	  var minDisOnly = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+	  var debug = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+	
+	  if (debug) {
+	    console.log('apspJohnson: adding dummy nodes ...');
+	  }
+	
+	  // add dummy nodes
+	  var gDummy = addDummySourceNode(clone(g), { w: 0 });
+	
+	  if (debug) {
+	    console.log('apspJohnson: calculating node weight ...');
+	  }
+	
+	  // calculate node weight
+	  var nn = g.ns.length,
+	      nodeWeights = ssspBellmanFord(gDummy, nn, debug);
+	  if (nodeWeights == null) {
+	    return null; // negative cycle detected
+	  }
+	
+	  if (debug) {
+	    console.log('apspJohnson: re-weighting each edge ...');
+	  }
+	
+	  // re-weight each edge and make it non-negative
+	  var gRW = clone(g),
+	      i;
+	  for (i = 0; i < gRW.es.length; i++) {
+	    var edge = gRW.es[i];
+	    edge.props.w = edge.props.w + nodeWeights[edge.from] - nodeWeights[edge.to];
+	  }
+	
+	  if (debug) {
+	    console.log('apspJohnson: runing dijkstra for each source ...');
+	  }
+	
+	  // run dijkstra for each source and restore path length
+	  var disMatrix = new Array(nn),
+	      minDis = null,
+	      j;
+	  for (i = 0; i < nn; i++) {
+	    var disArray = ssspDijkstra(gRW, i);
+	    for (j = 0; j < nn; j++) {
+	      if (disArray[j] != null) {
+	        disArray[j] = disArray[j] - nodeWeights[i] + nodeWeights[j];
+	        if (minDis == null || minDis > disArray[j]) {
+	          minDis = disArray[j];
+	        }
+	      }
+	    }
+	    if (!minDisOnly) {
+	      disMatrix[i] = disArray;
+	    }
+	    if (debug && Math.floor((i + 1) * 100 / nn) > Math.floor(i * 100 / nn)) {
+	      console.log('apspJohnson: completed ' + (i + 1) + '/' + nn + ' sources');
+	    }
+	  }
+	
+	  return minDisOnly ? minDis : disMatrix;
 	}
 	
 	function sumOfEdgeWeight(g, eidices) {
@@ -424,8 +674,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	
 	function maxSpacing(g, k) {
-	  var spt = _graph2.default.mstKruskal(g),
-	      eindices = spt.eindices.slice(0).sort(function (a, b) {
+	  var spte = _graph2.default.mstKruskal(g),
+	      eindices = spte.slice(0).sort(function (a, b) {
 	    return g.es[b].props.w - g.es[a].props.w;
 	  });
 	  return g.es[eindices[k - 2]].props.w;
@@ -497,6 +747,228 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	__webpack_require__(1);
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var dftCmpFunc = function dftCmpFunc(a, b) {
+	  return a - b;
+	},
+	    dftKeyFunc = function dftKeyFunc(a) {
+	  return a;
+	};
+	
+	var Heap = function () {
+	  function Heap() {
+	    var cmpFunc = arguments.length <= 0 || arguments[0] === undefined ? dftCmpFunc : arguments[0];
+	    var keyFunc = arguments.length <= 1 || arguments[1] === undefined ? dftKeyFunc : arguments[1];
+	    var arr = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+	    var pos = arguments.length <= 3 || arguments[3] === undefined ? new Map() : arguments[3];
+	
+	    _classCallCheck(this, Heap);
+	
+	    // input of arr and pos are used merely for testing
+	    this._cmpFunc = cmpFunc;
+	    this._keyFunc = keyFunc;
+	    this._arr = arr;
+	    this._pos = pos;
+	  }
+	
+	  _createClass(Heap, [{
+	    key: 'clear',
+	    value: function clear() {
+	      this._arr = [];
+	      this._pos = new Map();
+	    }
+	  }, {
+	    key: 'toObject',
+	    value: function toObject() {
+	      return {
+	        arr: this._arr,
+	        pos: Array.from(this._pos.entries()).sort(function (a, b) {
+	          return a[1] - b[1];
+	        })
+	      };
+	    }
+	  }, {
+	    key: 'push',
+	    value: function push(x) {
+	      var arr = this._arr,
+	          pos = this._pos;
+	
+	      var xkey = this._keyFunc(x);
+	      if (pos.has(xkey)) {
+	        throw new Error('heap push: key ' + xkey + ' already existed');
+	      } else {
+	        pos.set(xkey, arr.length);
+	        arr.push(x);
+	        this.siftUp();
+	      }
+	    }
+	  }, {
+	    key: 'pop',
+	    value: function pop() {
+	      var arr = this._arr,
+	          pos = this._pos,
+	          keyFunc = this._keyFunc,
+	          n = arr.length;
+	      if (n === 0) {
+	        throw new Error('heap pop: nothing to pop');
+	      }
+	
+	      var val = arr[0];
+	      pos.delete(keyFunc(val));
+	      if (n === 1) {
+	        arr.pop();
+	      } else {
+	        arr[0] = arr.pop();
+	        pos.set(keyFunc(arr[0]), 0);
+	        this.siftDown();
+	      }
+	      return val;
+	    }
+	  }, {
+	    key: 'peek',
+	    value: function peek() {
+	      var arr = this._arr;
+	      if (arr.length === 0) {
+	        throw new Error('heap peek: nothing to peek');
+	      }
+	
+	      return arr[0];
+	    }
+	  }, {
+	    key: 'popKey',
+	    value: function popKey(xkey) {
+	      var arr = this._arr,
+	          pos = this._pos,
+	          keyFunc = this._keyFunc;
+	
+	      if (!pos.has(xkey)) {
+	        throw new Error('heap popKey: key ' + xkey + ' does not exist');
+	      } else {
+	        var cur = pos.get(xkey),
+	            last = arr.length - 1,
+	            val = arr[cur];
+	        pos.delete(xkey);
+	        if (cur === last) {
+	          arr.pop();
+	        } else {
+	          pos.set(keyFunc(arr[last]), cur);
+	          arr[cur] = arr[last];
+	          arr.pop();
+	          this.siftUp(cur);
+	          this.siftDown(cur);
+	        }
+	        return val;
+	      }
+	    }
+	  }, {
+	    key: 'hasKey',
+	    value: function hasKey(xkey) {
+	      return this._pos.has(xkey);
+	    }
+	  }, {
+	    key: 'getKey',
+	    value: function getKey(xkey) {
+	      var arr = this._arr,
+	          pos = this._pos;
+	      if (!pos.has(xkey)) {
+	        throw new Error('heap getKey: key ' + xkey + ' does not exist');
+	      } else {
+	        return arr[pos.get(xkey)];
+	      }
+	    }
+	  }, {
+	    key: 'size',
+	    value: function size() {
+	      return this._arr.length;
+	    }
+	  }, {
+	    key: 'siftUp',
+	    value: function siftUp() {
+	      var start = arguments.length <= 0 || arguments[0] === undefined ? -1 : arguments[0];
+	
+	      var arr = this._arr,
+	          pos = this._pos,
+	          keyFunc = this._keyFunc,
+	          cmpFunc = this._cmpFunc,
+	          cur = start !== -1 ? start : arr.length - 1,
+	          parent;
+	
+	      while (cur > 0) {
+	        parent = Math.floor((cur - 1) / 2);
+	        if (cmpFunc(arr[cur], arr[parent]) < 0) {
+	          pos.set(keyFunc(arr[parent]), cur);
+	          pos.set(keyFunc(arr[cur]), parent);
+	          var _ref = [arr[cur], arr[parent]];
+	          arr[parent] = _ref[0];
+	          arr[cur] = _ref[1];
+	
+	          cur = parent;
+	        } else {
+	          break;
+	        }
+	      }
+	    }
+	  }, {
+	    key: 'siftDown',
+	    value: function siftDown() {
+	      var start = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+	
+	      var arr = this._arr,
+	          pos = this._pos,
+	          keyFunc = this._keyFunc,
+	          n = this._arr.length,
+	          cur = start,
+	          cmpFunc = this._cmpFunc,
+	          left,
+	          right,
+	          sel;
+	
+	      for (;;) {
+	        sel = cur;
+	        left = cur * 2 + 1;
+	        right = cur * 2 + 2;
+	        if (left < n && cmpFunc(arr[left], arr[sel]) < 0) {
+	          sel = left;
+	        }
+	        if (right < n && cmpFunc(arr[right], arr[sel]) < 0) {
+	          sel = right;
+	        }
+	        if (sel !== cur) {
+	          pos.set(keyFunc(arr[sel]), cur);
+	          pos.set(keyFunc(arr[cur]), sel);
+	          var _ref2 = [arr[cur], arr[sel]];
+	          arr[sel] = _ref2[0];
+	          arr[cur] = _ref2[1];
+	
+	          cur = sel;
+	        } else {
+	          break;
+	        }
+	      }
+	    }
+	  }]);
+	
+	  return Heap;
+	}();
+	
+	exports.default = Heap;
+	module.exports = exports['default'];
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
 	__webpack_require__(1);
 	
 	exports.default = {
@@ -558,7 +1030,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";

@@ -295,7 +295,7 @@ function ssspDijkstra(g, s) {
   return disArray;
 }
 
-function ssspBellmanFord(g, s) {
+function ssspBellmanFord(g, s, debug = false) {
   var nn = g.ns.length,
     prevDisArray = [],
     disArray = new Array(nn),
@@ -323,6 +323,9 @@ function ssspBellmanFord(g, s) {
         }
       }
     }
+    if (debug && Math.floor((k + 1) * 100 / nn) > Math.floor(k * 100 / nn)) {
+      console.log(`ssspBellmanFord: completed ${k + 1}/${nn} rounds`);
+    }
   }
 
   for (i = 0; i < nn; i++) {
@@ -334,18 +337,30 @@ function ssspBellmanFord(g, s) {
   return disArray;
 }
 
-function apspJohnson(g) {
+function apspJohnson(g, minDisOnly = false, debug = false) {
+  if (debug) {
+    console.log('apspJohnson: adding dummy nodes ...');
+  }
+
   // add dummy nodes
   var gDummy = addDummySourceNode(clone(g), { w: 0 });
 
+  if (debug) {
+    console.log('apspJohnson: calculating node weight ...');
+  }
+
   // calculate node weight
   var nn = g.ns.length,
-    nodeWeights = ssspBellmanFord(gDummy, nn);
+    nodeWeights = ssspBellmanFord(gDummy, nn, debug);
   if (nodeWeights == null) {
     return null; // negative cycle detected
   }
 
-  // re-weighting each edge and make it non-negative
+  if (debug) {
+    console.log('apspJohnson: re-weighting each edge ...');
+  }
+
+  // re-weight each edge and make it non-negative
   var gRW = clone(g),
     i;
   for (i = 0; i < gRW.es.length; i++) {
@@ -353,23 +368,33 @@ function apspJohnson(g) {
     edge.props.w = edge.props.w + nodeWeights[edge.from] - nodeWeights[edge.to];
   }
 
-  // run dijkstra for each source
-  var disMatrix = new Array(nn);
-  for (i = 0; i < nn; i++) {
-    disMatrix[i] = ssspDijkstra(gRW, i);
+  if (debug) {
+    console.log('apspJohnson: runing dijkstra for each source ...');
   }
 
-  // restore path length
-  var j;
+  // run dijkstra for each source and restore path length
+  var disMatrix = new Array(nn),
+    minDis = null,
+    j;
   for (i = 0; i < nn; i++) {
+    var disArray = ssspDijkstra(gRW, i);
     for (j = 0; j < nn; j++) {
-      if (disMatrix[i][j] != null) {
-        disMatrix[i][j] = disMatrix[i][j] - nodeWeights[i] + nodeWeights[j];
+      if (disArray[j] != null) {
+        disArray[j] = disArray[j] - nodeWeights[i] + nodeWeights[j];
+        if (minDis == null || minDis > disArray[j]) {
+          minDis = disArray[j];
+        }
       }
+    }
+    if (!minDisOnly) {
+      disMatrix[i] = disArray;
+    }
+    if (debug && Math.floor((i + 1) * 100 / nn) > Math.floor(i * 100 / nn)) {
+      console.log(`apspJohnson: completed ${i + 1}/${nn} sources`);
     }
   }
 
-  return disMatrix;
+  return minDisOnly ? minDis : disMatrix;
 }
 
 function sumOfEdgeWeight(g, eidices) {
