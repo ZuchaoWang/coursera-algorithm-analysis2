@@ -1,6 +1,11 @@
+import 'babel-polyfill';
+
 export default {
   toInt: toInt,
-  toIntMutate2: toIntMutate2
+  toIntMutate2: toIntMutate2,
+  intCount: intCount,
+  intDec1: intDec1,
+  genAllInts: genAllInts
 };
 
 function toInt(bits) {
@@ -26,6 +31,36 @@ function toIntMutate2(bits) {
     }
   }
   return mutated;
+}
+
+function intCount(sum, n) {
+  var count = 0;
+  for (var i = 0; i < n; i++) {
+    if (sum | 1 << (n - i - 1)) {
+      count++;
+    }
+  }
+  return count;
+}
+
+function intDec1(sum, n) {
+  var dec = [];
+  for (var i = 0; i < n; i++) {
+    if (sum | 1 << (n - i - 1)) {
+      dec.push({ p: i, s: sum - 1 << (n - i - 1) });
+    }
+  }
+  return dec;
+}
+
+function genAllInts(n) {
+  var N = Math.pow(2, n),
+    allInts = new Array(n + 1);
+  allInts.fill([]);
+  for (var i = 0; i < N; i++) {
+    allInts[intCount[i]].push(i);
+  }
+  return allInts;
 }
 
 function _mutate(intRep, bitAtP, p, n) {
