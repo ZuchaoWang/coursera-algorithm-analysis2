@@ -60,11 +60,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(8);
+	var _wcomptime = __webpack_require__(9);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
-	var _graph = __webpack_require__(2);
+	var _graph = __webpack_require__(3);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
@@ -76,13 +76,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _knapsack2 = _interopRequireDefault(_knapsack);
 	
+	var _tsp = __webpack_require__(8);
+	
+	var _tsp2 = _interopRequireDefault(_tsp);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
 	  wcomptime: _wcomptime2.default,
 	  graph: _graph2.default,
 	  clustering: _clustering2.default,
-	  knapsack: _knapsack2.default
+	  knapsack: _knapsack2.default,
+	  tsp: _tsp2.default
 	};
 	module.exports = exports['default'];
 
@@ -104,7 +109,95 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	__webpack_require__(1);
 	
-	var _unionfind = __webpack_require__(3);
+	exports.default = {
+	  toInt: toInt,
+	  toIntMutate2: toIntMutate2,
+	  intCount: intCount,
+	  intDec1: intDec1,
+	  genAllInts: genAllInts
+	};
+	
+	
+	function toInt(bits) {
+	  var n = bits.length,
+	      sum = 0;
+	  for (var i = 0; i < n; i++) {
+	    sum |= bits[i] << n - i - 1;
+	  }
+	  return sum;
+	}
+	
+	function toIntMutate2(bits) {
+	  var sum = toInt(bits),
+	      n = bits.length,
+	      mutated = [],
+	      tmp;
+	
+	  for (var i = 0; i < n; i++) {
+	    tmp = _mutate(sum, bits[i], i, n);
+	    mutated.push(tmp);
+	    for (var j = i + 1; j < n; j++) {
+	      mutated.push(_mutate(tmp, bits[j], j, n));
+	    }
+	  }
+	  return mutated;
+	}
+	
+	function intCount(sum, n) {
+	  var count = 0;
+	  for (var i = 0; i < n; i++) {
+	    if (sum & 1 << n - i - 1) {
+	      count++;
+	    }
+	  }
+	  return count;
+	}
+	
+	function intDec1(sum, n) {
+	  var dec = [];
+	  for (var i = 0; i < n; i++) {
+	    if (sum & 1 << n - i - 1) {
+	      dec.push({ p: i, s: sum - (1 << n - i - 1) });
+	    }
+	  }
+	  return dec;
+	}
+	
+	function genAllInts(n) {
+	  var N = Math.pow(2, n),
+	      allInts = new Array(n + 1),
+	      i;
+	  for (i = 0; i < n + 1; i++) {
+	    allInts[i] = [];
+	  }
+	  for (i = 0; i < N; i++) {
+	    allInts[intCount(i, n)].push(i);
+	  }
+	  return allInts;
+	}
+	
+	function _mutate(intRep, bitAtP, p, n) {
+	  if (bitAtP) {
+	    return intRep - (1 << n - p - 1);
+	  } else {
+	    return intRep + (1 << n - p - 1);
+	  }
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	__webpack_require__(1);
+	
+	var _unionfind = __webpack_require__(4);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
@@ -542,7 +635,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -593,55 +686,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = {
-	  toInt: toInt,
-	  toIntMutate2: toIntMutate2
-	};
-	
-	
-	function toInt(bits) {
-	  var n = bits.length,
-	      sum = 0;
-	  for (var i = 0; i < n; i++) {
-	    sum |= bits[i] << n - i - 1;
-	  }
-	  return sum;
-	}
-	
-	function toIntMutate2(bits) {
-	  var sum = toInt(bits),
-	      n = bits.length,
-	      mutated = [],
-	      tmp;
-	
-	  for (var i = 0; i < n; i++) {
-	    tmp = _mutate(sum, bits[i], i, n);
-	    mutated.push(tmp);
-	    for (var j = i + 1; j < n; j++) {
-	      mutated.push(_mutate(tmp, bits[j], j, n));
-	    }
-	  }
-	  return mutated;
-	}
-	
-	function _mutate(intRep, bitAtP, p, n) {
-	  if (bitAtP) {
-	    return intRep - (1 << n - p - 1);
-	  } else {
-	    return intRep + (1 << n - p - 1);
-	  }
-	}
-	module.exports = exports["default"];
-
-/***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -651,15 +695,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _graph = __webpack_require__(2);
+	var _graph = __webpack_require__(3);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
-	var _bitcode = __webpack_require__(4);
+	var _bitcode = __webpack_require__(2);
 	
 	var _bitcode2 = _interopRequireDefault(_bitcode);
 	
-	var _unionfind = __webpack_require__(3);
+	var _unionfind = __webpack_require__(4);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
 	
@@ -1031,6 +1075,143 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _bitcode = __webpack_require__(2);
+	
+	var _bitcode2 = _interopRequireDefault(_bitcode);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  geoDisMatrix: geoDisMatrix,
+	  tsp: tsp
+	};
+	
+	
+	function geoDisMatrix(pos) {
+	  var n = pos.length,
+	      disMatrix = new Array(n);
+	  for (var i = 0; i < n; i++) {
+	    disMatrix[i] = new Array(n);
+	    for (var j = 0; j < n; j++) {
+	      var dx = pos[i][0] - pos[j][0],
+	          dy = pos[i][1] - pos[j][1];
+	      disMatrix[i][j] = Math.sqrt(dx * dx + dy * dy);
+	    }
+	  }
+	  return disMatrix;
+	}
+	
+	function tsp(disMatrix, n) {
+	  var debug = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+	
+	  if (n <= 1) {
+	    return 0;
+	  }
+	
+	  if (debug) {
+	    console.log('generating all combinations ...');
+	  }
+	
+	  var N = Math.pow(2, n - 1),
+	      allInts = _bitcode2.default.genAllInts(n - 1);
+	
+	  var Nsub = 0,
+	      i;
+	  for (i = 0; i < allInts.length; i++) {
+	    Nsub = Math.max(Nsub, allInts[i].length);
+	  }
+	
+	  var prevMapping = new Uint32Array(N),
+	      curMapping = new Uint32Array(N),
+	      prevPath = new Float32Array(Nsub * n),
+	      curPath = new Float32Array(Nsub * n),
+	      prevCount = 0,
+	      curCount = 0;
+	
+	  if (debug) {
+	    console.log('running on 1 edge ...');
+	  }
+	
+	  var j, dec;
+	  curCount = n - 1;
+	  for (j = 0; j < n - 1; j++) {
+	    curMapping[allInts[1][j]] = j;
+	  }
+	  curPath.fill(-1, 0, (n - 1) * n);
+	  for (j = 0; j < n - 1; j++) {
+	    dec = _bitcode2.default.intDec1(allInts[1][j], n - 1);
+	    curPath[j * n + dec[0].p] = disMatrix[n - 1][dec[0].p];
+	  }
+	
+	  var prevDis, minDis, k, l;
+	  for (i = 2; i < n; i++) {
+	    if (debug) {
+	      console.log('running on ' + i + ' edges ...');
+	    }
+	
+	    var _ref = [curCount, prevCount];
+	    prevCount = _ref[0];
+	    curCount = _ref[1];
+	    var _ref2 = [curMapping, prevMapping];
+	    prevMapping = _ref2[0];
+	    curMapping = _ref2[1];
+	    var _ref3 = [curPath, prevPath];
+	    prevPath = _ref3[0];
+	    curPath = _ref3[1];
+	
+	    curCount = allInts[i].length;
+	    for (j = 0; j < curCount; j++) {
+	      curMapping[allInts[i][j]] = j;
+	    }
+	    curPath.fill(-1, 0, curCount * n);
+	    for (j = 0; j < curCount; j++) {
+	      dec = _bitcode2.default.intDec1(allInts[i][j], n - 1);
+	      for (k = 0; k < dec.length; k++) {
+	        // prefix-set: dec[k].s, prefix-last: l, cur-last: dec[k].p
+	        minDis = -1;
+	        for (l = 0; l < n; l++) {
+	          prevDis = prevPath[prevMapping[dec[k].s] * n + l];
+	          if (prevDis !== -1) {
+	            prevDis += disMatrix[l][dec[k].p];
+	            if (minDis === -1 || minDis > prevDis) {
+	              minDis = prevDis;
+	            }
+	          }
+	        }
+	        curPath[j * n + dec[k].p] = minDis;
+	      }
+	    }
+	  }
+	
+	  if (debug) {
+	    console.log('running on ' + i + ' edges ...');
+	  }
+	
+	  minDis = -1;
+	  var curDis;
+	  for (i = 0; i < n - 1; i++) {
+	    curDis = curPath[i];
+	    if (curDis !== -1) {
+	      curDis += disMatrix[i][n - 1];
+	      if (minDis === -1 || minDis > curDis) {
+	        minDis = curDis;
+	      }
+	    }
+	  }
+	  return minDis;
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 9 */
 /***/ function(module, exports) {
 
 	"use strict";

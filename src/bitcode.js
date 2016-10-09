@@ -36,7 +36,7 @@ function toIntMutate2(bits) {
 function intCount(sum, n) {
   var count = 0;
   for (var i = 0; i < n; i++) {
-    if (sum | 1 << (n - i - 1)) {
+    if (sum & (1 << (n - i - 1))) {
       count++;
     }
   }
@@ -46,8 +46,8 @@ function intCount(sum, n) {
 function intDec1(sum, n) {
   var dec = [];
   for (var i = 0; i < n; i++) {
-    if (sum | 1 << (n - i - 1)) {
-      dec.push({ p: i, s: sum - 1 << (n - i - 1) });
+    if (sum & (1 << (n - i - 1))) {
+      dec.push({ p: i, s: sum - (1 << (n - i - 1)) });
     }
   }
   return dec;
@@ -55,10 +55,13 @@ function intDec1(sum, n) {
 
 function genAllInts(n) {
   var N = Math.pow(2, n),
-    allInts = new Array(n + 1);
-  allInts.fill([]);
-  for (var i = 0; i < N; i++) {
-    allInts[intCount[i]].push(i);
+    allInts = new Array(n + 1),
+    i;
+  for (i = 0; i < n + 1; i++) {
+    allInts[i] = [];
+  }
+  for (i = 0; i < N; i++) {
+    allInts[intCount(i, n)].push(i);
   }
   return allInts;
 }
