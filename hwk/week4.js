@@ -2,7 +2,7 @@ var fs = require('fs'),
   path = require('path');
 var aa2 = require('../dist/aa2');
 
-var makeGraphFromWeightedEdges = aa2.graph.makeGraphFromWeightedEdges,
+var makeGraphFromEdges = aa2.graph.makeGraphFromEdges,
   apspJohnson = aa2.graph.apspJohnson;
 
 function calculate(dataFileRelPath, largeData = false) {
@@ -17,7 +17,7 @@ function calculate(dataFileRelPath, largeData = false) {
 
   console.log('calculating ...');
 
-  var g = makeGraphFromWeightedEdges(data, true),
+  var g = makeGraphFromEdges(data, true, true),
     res = apspJohnson(g, largeData, largeData),
     minDis = null;
 
@@ -37,7 +37,7 @@ function calculate(dataFileRelPath, largeData = false) {
       }
     }
   }
-  
+
   console.log('shortest shortest path length:', minDis);
 }
 

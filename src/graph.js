@@ -3,9 +3,12 @@ import UnionFind from './unionfind';
 import Heap from './heap';
 
 export default {
-  makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
+  makeGraphFromEdges: makeGraphFromEdges,
   addDummySourceNode: addDummySourceNode,
   clone: clone,
+  reverse: reverse,
+  dfs: dfs,
+  sccKosaraju: sccKosaraju,
   mstPrim: mstPrim,
   mstKruskal: mstKruskal,
   ssspDijkstra: ssspDijkstra,
@@ -14,7 +17,7 @@ export default {
   sumOfEdgeWeight: sumOfEdgeWeight
 };
 
-function makeGraphFromWeightedEdges(wedges, directed = false) {
+function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   var nn = 0,
     i;
   for (i = 0; i < wedges.length; i++) {
@@ -37,9 +40,7 @@ function makeGraphFromWeightedEdges(wedges, directed = false) {
       idx: i,
       from: wedges[i].from,
       to: wedges[i].to,
-      props: {
-        w: wedges[i].w
-      }
+      props: weighted ? { w: wedges[i].w } : { w: 1 }
     };
     if (directed) {
       ns[wedges[i].from].outnbs.push({
@@ -171,6 +172,126 @@ function clone(g) {
     ns: ns,
     es: es
   };
+}
+
+function reverse(g) {
+  if (!g.directed) {
+    return g;
+  }
+
+  var nn = g.ns.length,
+    en = g.es.length,
+    ns = new Array(nn),
+    es = new Array(en),
+    i, j;
+
+  for (i = 0; i < nn; i++) {
+    ns[i] = { idx: i, innbs: [], outnbs: [] };
+    for (j = 0; j < g.ns[i].outnbs.length; j++) {
+      ns[i].innbs.push({
+        nidx: g.ns[i].outnbs[j].nidx,
+        eidx: g.ns[i].outnbs[j].eidx
+      });
+    }
+    for (j = 0; j < g.ns[i].innbs.length; j++) {
+      ns[i].outnbs.push({
+        nidx: g.ns[i].innbs[j].nidx,
+        eidx: g.ns[i].innbs[j].eidx
+      });
+    }
+  }
+
+  for (i = 0; i < en; i++) {
+    es[i] = {
+      idx: i,
+      from: g.es[i].to,
+      to: g.es[i].from,
+      props: Object.assign({}, g.es[i].props) // props will be shallow copy
+    };
+  }
+
+  return {
+    directed: true,
+    ns: ns,
+    es: es
+  };
+}
+
+function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
+  var nn = g.ns.length,
+    anynbs = g.directed ? 'outnbs' : 'nbs',
+    stack = [],
+    visited = new Array(nn),
+    i;
+  visited.fill(false);
+
+  if (!nOrder) {
+    nOrder = new Array(nn);
+    for (i = 0; i < nn; i++) {
+      nOrder[i] = i;
+    }
+  }
+
+  for (i = 0; i < nOrder.length; i++) {
+    var cur = nOrder[i];
+    if (!visited[cur]) {
+      visited[cur] = true;
+      if (cbLeader) {
+        cbLeader(cur);
+      }
+      if (cbPre) {
+        cbPre(cur);
+      }
+      stack.push({ cur: cur, nbChecked: 0 });
+      while (stack.length) {
+        var pc = stack.pop(),
+          nnb = g.ns[pc.cur][anynbs].length,
+          j = pc.nbChecked;
+        while (j < nnb) {
+          var next = g.ns[pc.cur][anynbs][j].nidx;
+          if (!visited[next]) {
+            stack.push({ cur: pc.cur, nbChecked: j + 1 });
+            visited[next] = true;
+            if (cbPre) {
+              cbPre(next);
+            }
+            stack.push({ cur: next, nbChecked: 0 });
+            break;
+          }
+          j++;
+        }
+        if (j === nnb) {
+          if (cbPost) {
+            cbPost(pc.cur);
+          }
+        }
+      }
+    }
+  }
+}
+
+function sccKosaraju(g) {
+  var nn = g.ns.length,
+    order = [],
+    gRev = reverse(g);
+
+  dfs(gRev, null, null, null,
+    i => {
+      order.push(i);
+    });
+  order = order.reverse();
+
+  var labels = new Array(nn),
+    compCount = 0;
+  dfs(g, order,
+    i => {
+      compCount++;
+    },
+    i => {
+      labels[i] = compCount - 1;
+    }, null);
+
+  return labels;
 }
 
 function mstPrim(g) {

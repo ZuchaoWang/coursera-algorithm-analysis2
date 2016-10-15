@@ -26,7 +26,7 @@ describe('clustering', () => {
 
     it('should be correct', () => {
       function _testOne(t, k) {
-        var g = Graph.makeGraphFromWeightedEdges(t);
+        var g = Graph.makeGraphFromEdges(t, false, true);
         return Clustering.maxSpacing(g, k);
       }
       expect(_testOne(g1, 4)).toBe(7);
