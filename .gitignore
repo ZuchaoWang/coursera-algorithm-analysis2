@@ -2,3 +2,8 @@ node_modules
 data/ClusteringBig.txt
 data/ClusteringSmall.txt
 data/APSP4.txt
+data/TwoSAT2.txt
+data/TwoSAT3.txt
+data/TwoSAT4.txt
+data/TwoSAT5.txt
+data/TwoSAT6.txt
