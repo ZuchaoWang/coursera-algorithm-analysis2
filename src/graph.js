@@ -181,40 +181,17 @@ function reverse(g) {
 
   var nn = g.ns.length,
     en = g.es.length,
-    ns = new Array(nn),
-    es = new Array(en),
-    i, j;
+    i;
 
   for (i = 0; i < nn; i++) {
-    ns[i] = { idx: i, innbs: [], outnbs: [] };
-    for (j = 0; j < g.ns[i].outnbs.length; j++) {
-      ns[i].innbs.push({
-        nidx: g.ns[i].outnbs[j].nidx,
-        eidx: g.ns[i].outnbs[j].eidx
-      });
-    }
-    for (j = 0; j < g.ns[i].innbs.length; j++) {
-      ns[i].outnbs.push({
-        nidx: g.ns[i].innbs[j].nidx,
-        eidx: g.ns[i].innbs[j].eidx
-      });
-    }
+    [g.ns[i].innbs, g.ns[i].outnbs] = [g.ns[i].outnbs, g.ns[i].innbs];
   }
 
   for (i = 0; i < en; i++) {
-    es[i] = {
-      idx: i,
-      from: g.es[i].to,
-      to: g.es[i].from,
-      props: Object.assign({}, g.es[i].props) // props will be shallow copy
-    };
+    [g.es[i].from, g.es[i].to] = [g.es[i].to, g.es[i].from];
   }
 
-  return {
-    directed: true,
-    ns: ns,
-    es: es
-  };
+  return g;
 }
 
 function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
@@ -281,9 +258,10 @@ function sccKosaraju(g) {
     });
   order = order.reverse();
 
-  var labels = new Array(nn),
+  var gOri = reverse(gRev),
+    labels = new Array(nn),
     compCount = 0;
-  dfs(g, order,
+  dfs(gOri, order,
     i => {
       compCount++;
     },
