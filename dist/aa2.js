@@ -60,11 +60,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _wcomptime = __webpack_require__(9);
+	var _wcomptime = __webpack_require__(10);
 	
 	var _wcomptime2 = _interopRequireDefault(_wcomptime);
 	
-	var _graph = __webpack_require__(3);
+	var _graph = __webpack_require__(2);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
@@ -80,6 +80,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _tsp2 = _interopRequireDefault(_tsp);
 	
+	var _twosat = __webpack_require__(9);
+	
+	var _twosat2 = _interopRequireDefault(_twosat);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
@@ -87,7 +91,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  graph: _graph2.default,
 	  clustering: _clustering2.default,
 	  knapsack: _knapsack2.default,
-	  tsp: _tsp2.default
+	  tsp: _tsp2.default,
+	  twosat: _twosat2.default
 	};
 	module.exports = exports['default'];
 
@@ -109,94 +114,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	__webpack_require__(1);
 	
-	exports.default = {
-	  toInt: toInt,
-	  toIntMutate2: toIntMutate2,
-	  intCount: intCount,
-	  intDec1: intDec1,
-	  genAllInts: genAllInts
-	};
-	
-	
-	function toInt(bits) {
-	  var n = bits.length,
-	      sum = 0;
-	  for (var i = 0; i < n; i++) {
-	    sum |= bits[i] << n - i - 1;
-	  }
-	  return sum;
-	}
-	
-	function toIntMutate2(bits) {
-	  var sum = toInt(bits),
-	      n = bits.length,
-	      mutated = [],
-	      tmp;
-	
-	  for (var i = 0; i < n; i++) {
-	    tmp = _mutate(sum, bits[i], i, n);
-	    mutated.push(tmp);
-	    for (var j = i + 1; j < n; j++) {
-	      mutated.push(_mutate(tmp, bits[j], j, n));
-	    }
-	  }
-	  return mutated;
-	}
-	
-	function intCount(sum, n) {
-	  var count = 0;
-	  for (var i = 0; i < n; i++) {
-	    if (sum & 1 << n - i - 1) {
-	      count++;
-	    }
-	  }
-	  return count;
-	}
-	
-	function intDec1(sum, n) {
-	  var dec = [];
-	  for (var i = 0; i < n; i++) {
-	    if (sum & 1 << n - i - 1) {
-	      dec.push({ p: i, s: sum - (1 << n - i - 1) });
-	    }
-	  }
-	  return dec;
-	}
-	
-	function genAllInts(n) {
-	  var N = Math.pow(2, n),
-	      allInts = new Array(n + 1),
-	      i;
-	  for (i = 0; i < n + 1; i++) {
-	    allInts[i] = [];
-	  }
-	  for (i = 0; i < N; i++) {
-	    allInts[intCount(i, n)].push(i);
-	  }
-	  return allInts;
-	}
-	
-	function _mutate(intRep, bitAtP, p, n) {
-	  if (bitAtP) {
-	    return intRep - (1 << n - p - 1);
-	  } else {
-	    return intRep + (1 << n - p - 1);
-	  }
-	}
-	module.exports = exports['default'];
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	__webpack_require__(1);
-	
 	var _unionfind = __webpack_require__(4);
 	
 	var _unionfind2 = _interopRequireDefault(_unionfind);
@@ -208,9 +125,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
-	  makeGraphFromWeightedEdges: makeGraphFromWeightedEdges,
+	  makeGraphFromEdges: makeGraphFromEdges,
 	  addDummySourceNode: addDummySourceNode,
 	  clone: clone,
+	  reverse: reverse,
+	  dfs: dfs,
+	  sccKosaraju: sccKosaraju,
 	  mstPrim: mstPrim,
 	  mstKruskal: mstKruskal,
 	  ssspDijkstra: ssspDijkstra,
@@ -220,8 +140,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	
-	function makeGraphFromWeightedEdges(wedges) {
+	function makeGraphFromEdges(wedges) {
 	  var directed = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+	  var weighted = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
 	
 	  var nn = 0,
 	      i;
@@ -245,9 +166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      idx: i,
 	      from: wedges[i].from,
 	      to: wedges[i].to,
-	      props: {
-	        w: wedges[i].w
-	      }
+	      props: weighted ? { w: wedges[i].w } : { w: 1 }
 	    };
 	    if (directed) {
 	      ns[wedges[i].from].outnbs.push({
@@ -380,6 +299,105 @@ return /******/ (function(modules) { // webpackBootstrap
 	    ns: ns,
 	    es: es
 	  };
+	}
+	
+	function reverse(g) {
+	  if (!g.directed) {
+	    return g;
+	  }
+	
+	  var nn = g.ns.length,
+	      en = g.es.length,
+	      i;
+	
+	  for (i = 0; i < nn; i++) {
+	    var _ref = [g.ns[i].outnbs, g.ns[i].innbs];
+	    g.ns[i].innbs = _ref[0];
+	    g.ns[i].outnbs = _ref[1];
+	  }
+	
+	  for (i = 0; i < en; i++) {
+	    var _ref2 = [g.es[i].to, g.es[i].from];
+	    g.es[i].from = _ref2[0];
+	    g.es[i].to = _ref2[1];
+	  }
+	
+	  return g;
+	}
+	
+	function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
+	  var nn = g.ns.length,
+	      anynbs = g.directed ? 'outnbs' : 'nbs',
+	      stack = [],
+	      visited = new Array(nn),
+	      i;
+	  visited.fill(false);
+	
+	  if (!nOrder) {
+	    nOrder = new Array(nn);
+	    for (i = 0; i < nn; i++) {
+	      nOrder[i] = i;
+	    }
+	  }
+	
+	  for (i = 0; i < nOrder.length; i++) {
+	    var cur = nOrder[i];
+	    if (!visited[cur]) {
+	      visited[cur] = true;
+	      if (cbLeader) {
+	        cbLeader(cur);
+	      }
+	      if (cbPre) {
+	        cbPre(cur);
+	      }
+	      stack.push({ cur: cur, nbChecked: 0 });
+	      while (stack.length) {
+	        var pc = stack.pop(),
+	            nnb = g.ns[pc.cur][anynbs].length,
+	            j = pc.nbChecked;
+	        while (j < nnb) {
+	          var next = g.ns[pc.cur][anynbs][j].nidx;
+	          if (!visited[next]) {
+	            stack.push({ cur: pc.cur, nbChecked: j + 1 });
+	            visited[next] = true;
+	            if (cbPre) {
+	              cbPre(next);
+	            }
+	            stack.push({ cur: next, nbChecked: 0 });
+	            break;
+	          }
+	          j++;
+	        }
+	        if (j === nnb) {
+	          if (cbPost) {
+	            cbPost(pc.cur);
+	          }
+	        }
+	      }
+	    }
+	  }
+	}
+	
+	function sccKosaraju(g) {
+	  var nn = g.ns.length,
+	      order = [],
+	      gRev = reverse(g);
+	
+	  dfs(gRev, null, null, null, function (i) {
+	    order.push(i);
+	  });
+	  order = order.reverse();
+	
+	  var gOri = reverse(gRev),
+	      labels = new Array(nn),
+	      compCount = 0;
+	  dfs(gOri, order, function (i) {
+	    compCount++;
+	  }, function (i) {
+	    labels[i] = compCount - 1;
+	  }, null);
+	
+	  return labels;
 	}
 	
 	function mstPrim(g) {
@@ -635,6 +653,94 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	__webpack_require__(1);
+	
+	exports.default = {
+	  toInt: toInt,
+	  toIntMutate2: toIntMutate2,
+	  intCount: intCount,
+	  intDec1: intDec1,
+	  genAllInts: genAllInts
+	};
+	
+	
+	function toInt(bits) {
+	  var n = bits.length,
+	      sum = 0;
+	  for (var i = 0; i < n; i++) {
+	    sum |= bits[i] << n - i - 1;
+	  }
+	  return sum;
+	}
+	
+	function toIntMutate2(bits) {
+	  var sum = toInt(bits),
+	      n = bits.length,
+	      mutated = [],
+	      tmp;
+	
+	  for (var i = 0; i < n; i++) {
+	    tmp = _mutate(sum, bits[i], i, n);
+	    mutated.push(tmp);
+	    for (var j = i + 1; j < n; j++) {
+	      mutated.push(_mutate(tmp, bits[j], j, n));
+	    }
+	  }
+	  return mutated;
+	}
+	
+	function intCount(sum, n) {
+	  var count = 0;
+	  for (var i = 0; i < n; i++) {
+	    if (sum & 1 << n - i - 1) {
+	      count++;
+	    }
+	  }
+	  return count;
+	}
+	
+	function intDec1(sum, n) {
+	  var dec = [];
+	  for (var i = 0; i < n; i++) {
+	    if (sum & 1 << n - i - 1) {
+	      dec.push({ p: i, s: sum - (1 << n - i - 1) });
+	    }
+	  }
+	  return dec;
+	}
+	
+	function genAllInts(n) {
+	  var N = Math.pow(2, n),
+	      allInts = new Array(n + 1),
+	      i;
+	  for (i = 0; i < n + 1; i++) {
+	    allInts[i] = [];
+	  }
+	  for (i = 0; i < N; i++) {
+	    allInts[intCount(i, n)].push(i);
+	  }
+	  return allInts;
+	}
+	
+	function _mutate(intRep, bitAtP, p, n) {
+	  if (bitAtP) {
+	    return intRep - (1 << n - p - 1);
+	  } else {
+	    return intRep + (1 << n - p - 1);
+	  }
+	}
+	module.exports = exports['default'];
+
+/***/ },
 /* 4 */
 /***/ function(module, exports) {
 
@@ -695,11 +801,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _graph = __webpack_require__(3);
+	var _graph = __webpack_require__(2);
 	
 	var _graph2 = _interopRequireDefault(_graph);
 	
-	var _bitcode = __webpack_require__(2);
+	var _bitcode = __webpack_require__(3);
 	
 	var _bitcode2 = _interopRequireDefault(_bitcode);
 	
@@ -1083,7 +1189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	
-	var _bitcode = __webpack_require__(2);
+	var _bitcode = __webpack_require__(3);
 	
 	var _bitcode2 = _interopRequireDefault(_bitcode);
 	
@@ -1212,6 +1318,114 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+	
+	var _graph = __webpack_require__(2);
+	
+	var _graph2 = _interopRequireDefault(_graph);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  isSatisfiable: isSatisfiable
+	};
+	
+	
+	function isSatisfiable(twoSatArray) {
+	  var g = twoSatArray2Graph(twoSatArray),
+	      nn = g.ns.length / 2,
+	      labels = _graph2.default.sccKosaraju(g);
+	  for (var i = 0; i < nn; i++) {
+	    if (labels[i] === labels[i + nn]) {
+	      return false;
+	    }
+	  }
+	  return true;
+	}
+	
+	function twoSatArray2Graph(twoSatArray) {
+	  var vn = 0;
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+	
+	  try {
+	    for (var _iterator = twoSatArray[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var _step$value = _slicedToArray(_step.value, 2);
+	
+	      var vidx1 = _step$value[0];
+	      var vidx2 = _step$value[1];
+	
+	      vn = Math.max(vn, Math.abs(vidx1));
+	      vn = Math.max(vn, Math.abs(vidx2));
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+	
+	  var edges = [];
+	  var _iteratorNormalCompletion2 = true;
+	  var _didIteratorError2 = false;
+	  var _iteratorError2 = undefined;
+	
+	  try {
+	    for (var _iterator2 = twoSatArray[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	      var _step2$value = _slicedToArray(_step2.value, 2);
+	
+	      var vidx1 = _step2$value[0];
+	      var vidx2 = _step2$value[1];
+	
+	      edges.push({ from: vidx2nidx(-vidx1, vn), to: vidx2nidx(vidx2, vn) });
+	      edges.push({ from: vidx2nidx(-vidx2, vn), to: vidx2nidx(vidx1, vn) });
+	    }
+	  } catch (err) {
+	    _didIteratorError2 = true;
+	    _iteratorError2 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	        _iterator2.return();
+	      }
+	    } finally {
+	      if (_didIteratorError2) {
+	        throw _iteratorError2;
+	      }
+	    }
+	  }
+	
+	  return _graph2.default.makeGraphFromEdges(edges, true, false);
+	}
+	
+	function vidx2nidx(vidx, vn) {
+	  if (vidx > 0) {
+	    return vidx - 1;
+	  } else {
+	    return -vidx - 1 + vn;
+	  }
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 10 */
 /***/ function(module, exports) {
 
 	"use strict";
