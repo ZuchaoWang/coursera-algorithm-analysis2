@@ -136,14 +136,14 @@ describe('heap', () => {
     });
   });
 
-  describe('popKey', () => {
+  describe('deleteKey', () => {
     it('should remove element', () => {
       var h = new Heap(undefined, undefined, [1, 3, 2], new Map([
         [1, 0],
         [3, 1],
         [2, 2]
       ]));
-      expect(h.popKey(3)).toEqual(3);
+      expect(h.deleteKey(3)).toEqual(3);
       expect(h.toObject()).toEqual({
         arr: [1, 2],
         pos: [
@@ -160,7 +160,7 @@ describe('heap', () => {
           [3, 1],
           [2, 2]
         ]));
-      expect(h.popKey(3)).toEqual({ k: 3, w: 9 });
+      expect(h.deleteKey(3)).toEqual({ k: 3, w: 9 });
       expect(h.toObject()).toEqual({
         arr: [{ k: 1, w: 1 }, { k: 2, w: 4 }],
         pos: [
@@ -174,7 +174,7 @@ describe('heap', () => {
       var h = new Heap((a, b) => a.w - b.w, a => a.k, [{ k: 1, w: 1 }], new Map([
         [1, 0]
       ]));
-      expect(h.popKey(1)).toEqual({ k: 1, w: 1 });
+      expect(h.deleteKey(1)).toEqual({ k: 1, w: 1 });
       expect(h.toObject()).toEqual({
         arr: [],
         pos: []
@@ -186,7 +186,7 @@ describe('heap', () => {
         [1, 0],
         [2, 1]
       ]));
-      expect(h.popKey(2)).toEqual({ k: 2, w: 4 });
+      expect(h.deleteKey(2)).toEqual({ k: 2, w: 4 });
       expect(h.toObject()).toEqual({
         arr: [{ k: 1, w: 1 }],
         pos: [

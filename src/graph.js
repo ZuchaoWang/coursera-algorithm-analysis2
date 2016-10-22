@@ -314,7 +314,7 @@ function mstPrim(g) {
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
           if (g.es[nextEidx].props.w < prevElem.w) {
-            nfrontier.popKey(nextNidx);
+            nfrontier.deleteKey(nextNidx);
             nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
           }
         } else { // previously unreachable
@@ -381,7 +381,7 @@ function ssspDijkstra(g, s) {
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
           if (disArray[minNidx] + g.es[nextEidx].props.w < prevElem.w) {
-            nfrontier.popKey(nextNidx);
+            nfrontier.deleteKey(nextNidx);
             nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
           }
         } else {

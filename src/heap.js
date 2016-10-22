@@ -68,13 +68,13 @@ export default class Heap {
     return arr[0];
   }
 
-  popKey(xkey) {
+  deleteKey(xkey) {
     var arr = this._arr,
       pos = this._pos,
       keyFunc = this._keyFunc;
 
     if (!pos.has(xkey)) {
-      throw new Error(`heap popKey: key ${xkey} does not exist`);
+      throw new Error(`heap deleteKey: key ${xkey} does not exist`);
     } else {
       var cur = pos.get(xkey),
         last = arr.length - 1,
