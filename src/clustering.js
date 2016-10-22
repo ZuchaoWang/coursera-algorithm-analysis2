@@ -10,8 +10,8 @@ export default {
 
 function maxSpacing(g, k) {
   var spte = Graph.mstKruskal(g),
-    eindices = spte.slice(0).sort((a, b) => g.es[b].props.w - g.es[a].props.w);
-  return g.es[eindices[k - 2]].props.w;
+    eindices = spte.slice(0).sort((a, b) => g.es[b].w - g.es[a].w);
+  return g.es[eindices[k - 2]].w;
 }
 
 function bitcodeK2(bitcodeArr) {

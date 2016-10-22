@@ -5,7 +5,7 @@ import Heap from './heap';
 export default {
   makeGraphFromEdges: makeGraphFromEdges,
   addDummySourceNode: addDummySourceNode,
-  clone: clone,
+  cloneTopology: cloneTopology,
   reverse: reverse,
   dfs: dfs,
   sccKosaraju: sccKosaraju,
@@ -28,9 +28,9 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   var ns = new Array(nn);
   for (i = 0; i < nn; i++) {
     if (directed) {
-      ns[i] = { idx: i, outnbs: [] };
+      ns[i] = { idx: i, olinks: [] };
     } else {
-      ns[i] = { idx: i, nbs: [] };
+      ns[i] = { idx: i, links: [] };
     }
   }
 
@@ -40,22 +40,13 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
       idx: i,
       source: wedges[i].source,
       target: wedges[i].target,
-      props: weighted ? { w: wedges[i].w } : { w: 1 }
+      w: weighted ? wedges[i].w : 1
     };
     if (directed) {
-      ns[wedges[i].source].outnbs.push({
-        nidx: wedges[i].target,
-        eidx: i
-      });
+      ns[wedges[i].source].olinks.push(i);
     } else {
-      ns[wedges[i].source].nbs.push({
-        nidx: wedges[i].target,
-        eidx: i
-      });
-      ns[wedges[i].target].nbs.push({
-        nidx: wedges[i].source,
-        eidx: i
-      });
+      ns[wedges[i].source].links.push(i);
+      ns[wedges[i].target].links.push(i);
     }
   }
 
@@ -76,17 +67,14 @@ function addDummySourceNode(g, nFunc, eFunc) {
   if (g.directed) {
     node = {
       idx: nn,
-      outnbs: []
+      olinks: []
     };
     if (nFunc) {
       nFunc(node);
     }
     g.ns.push(node);
     for (i = 0; i < nn; i++) {
-      g.ns[nn].outnbs.push({
-        nidx: i,
-        eidx: en + i
-      });
+      g.ns[nn].olinks.push(en + i);
       edge = {
         idx: en + i,
         source: nn,
@@ -100,21 +88,15 @@ function addDummySourceNode(g, nFunc, eFunc) {
   } else {
     node = {
       idx: nn,
-      nbs: []
+      links: []
     };
     if (nFunc) {
       nFunc(node);
     }
     g.ns.push(node);
     for (i = 0; i < nn; i++) {
-      g.ns[nn].nbs.push({
-        nidx: i,
-        eidx: en + i
-      });
-      g.ns[i].nbs.push({
-        nidx: nn,
-        eidx: en + i
-      });
+      g.ns[nn].links.push(en + i);
+      g.ns[i].links.push(en + i);
       edge = {
         idx: en + i,
         source: nn,
@@ -130,32 +112,20 @@ function addDummySourceNode(g, nFunc, eFunc) {
   return g;
 }
 
-function clone(g) {
+function cloneTopology(g) {
   var nn = g.ns.length,
     en = g.es.length,
     ns = new Array(nn),
     es = new Array(en),
-    i, j;
+    i;
 
   if (g.directed) {
     for (i = 0; i < nn; i++) {
-      ns[i] = { idx: i, outnbs: [] };
-      for (j = 0; j < g.ns[i].outnbs.length; j++) {
-        ns[i].outnbs.push({
-          nidx: g.ns[i].outnbs[j].nidx,
-          eidx: g.ns[i].outnbs[j].eidx
-        });
-      }
+      ns[i] = { idx: i, olinks: g.ns[i].olinks.slice(0) };
     }
   } else {
     for (i = 0; i < nn; i++) {
-      ns[i] = { idx: i, nbs: [] };
-      for (j = 0; j < g.ns[i].nbs.length; j++) {
-        ns[i].nbs.push({
-          nidx: g.ns[i].nbs[j].nidx,
-          eidx: g.ns[i].nbs[j].eidx
-        });
-      }
+      ns[i] = { idx: i, links: g.ns[i].links.slice(0) };
     }
   }
 
@@ -164,7 +134,7 @@ function clone(g) {
       idx: i,
       source: g.es[i].source,
       target: g.es[i].target,
-      props: Object.assign({}, g.es[i].props) // props will be shallow copy
+      w: g.es[i].w
     };
   }
 
@@ -186,13 +156,13 @@ function reverse(g) {
     i;
 
   for (i = 0; i < nn; i++) {
-    g.ns[i].outnbs = [];
+    g.ns[i].olinks = [];
   }
 
   for (i = 0; i < en; i++) {
     edge = g.es[i];
     [edge.source, edge.target] = [edge.target, edge.source];
-    g.ns[edge.source].outnbs.push({ nidx: edge.target, eidx: i });
+    g.ns[edge.source].olinks.push(i);
   }
 
   return g;
@@ -200,7 +170,7 @@ function reverse(g) {
 
 function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
   var nn = g.ns.length,
-    anynbs = g.directed ? 'outnbs' : 'nbs',
+    anylinks = g.directed ? 'olinks' : 'links',
     stack = [],
     visited = new Array(nn),
     i;
@@ -226,10 +196,11 @@ function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
       stack.push({ cur: cur, nbChecked: 0 });
       while (stack.length) {
         var pc = stack.pop(),
-          nnb = g.ns[pc.cur][anynbs].length,
+          nl = g.ns[pc.cur][anylinks].length,
           j = pc.nbChecked;
-        while (j < nnb) {
-          var next = g.ns[pc.cur][anynbs][j].nidx;
+        while (j < nl) {
+          var nextLink = g.es[g.ns[pc.cur][anylinks][j]],
+            next = (nextLink.target === pc.cur) ? nextLink.source : nextLink.target;
           if (!visited[next]) {
             stack.push({ cur: pc.cur, nbChecked: j + 1 });
             visited[next] = true;
@@ -241,7 +212,7 @@ function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
           }
           j++;
         }
-        if (j === nnb) {
+        if (j === nl) {
           if (cbPost) {
             cbPost(pc.cur);
           }
@@ -308,21 +279,20 @@ function mstPrim(g) {
     }
 
     // for all neighbours
-    for (var i = 0; i < g.ns[minNidx].nbs.length; i++) {
-      var nb = g.ns[minNidx].nbs[i],
-        nextNidx = nb.nidx,
-        nextEidx = nb.eidx;
+    for (var i = 0; i < g.ns[minNidx].links.length; i++) {
+      var nextEidx = g.ns[minNidx].links[i],
+        nextNidx = (g.es[nextEidx].target === minNidx) ? g.es[nextEidx].source : g.es[nextEidx].target;
 
       // restrict target neighbours that are not added
       if (!nadded.has(nextNidx)) {
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
-          if (g.es[nextEidx].props.w < prevElem.w) {
+          if (g.es[nextEidx].w < prevElem.w) {
             nfrontier.deleteKey(nextNidx);
-            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
+            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].w });
           }
         } else { // previously unreachable
-          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
+          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].w });
         }
       }
     }
@@ -334,7 +304,7 @@ function mstPrim(g) {
 function mstKruskal(g) {
   var nn = g.ns.length,
     uf = UnionFind.init(nn),
-    eSorted = g.es.slice(0).sort((a, b) => a.props.w - b.props.w);
+    eSorted = g.es.slice(0).sort((a, b) => a.w - b.w);
 
   var eadded = [];
   for (var i = 0; i < eSorted.length; i++) {
@@ -376,20 +346,19 @@ function ssspDijkstra(g, s) {
     }
 
     // for all neighbours
-    for (i = 0; i < g.ns[minNidx].outnbs.length; i++) {
-      var outnb = g.ns[minNidx].outnbs[i],
-        nextNidx = outnb.nidx,
-        nextEidx = outnb.eidx;
+    for (i = 0; i < g.ns[minNidx].olinks.length; i++) {
+      var nextEidx = g.ns[minNidx].olinks[i],
+        nextNidx = (g.es[nextEidx].target === minNidx) ? g.es[nextEidx].source : g.es[nextEidx].target;
 
       if (disArray[nextNidx] == null) { // not done
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
-          if (disArray[minNidx] + g.es[nextEidx].props.w < prevElem.w) {
+          if (disArray[minNidx] + g.es[nextEidx].w < prevElem.w) {
             nfrontier.deleteKey(nextNidx);
-            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].w });
           }
         } else {
-          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].w });
         }
       }
     }
@@ -416,12 +385,11 @@ function ssspBellmanFord(g, s, debug = false) {
     for (var curNidx = 0; curNidx < nn; curNidx++) {
       if (prevDisArray[curNidx] != null) {
         // for all neighbours
-        for (var j = 0; j < g.ns[curNidx].outnbs.length; j++) {
-          var outnb = g.ns[curNidx].outnbs[j],
-            nextNidx = outnb.nidx,
-            nextEidx = outnb.eidx;
-          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].props.w < disArray[nextNidx]) {
-            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].props.w;
+        for (var j = 0; j < g.ns[curNidx].olinks.length; j++) {
+          var nextEidx = g.ns[curNidx].olinks[j],
+            nextNidx = (g.es[nextEidx].target === curNidx) ? g.es[nextEidx].source : g.es[nextEidx].target;
+          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].w < disArray[nextNidx]) {
+            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].w;
           }
         }
       }
@@ -446,8 +414,8 @@ function apspJohnson(g, minDisOnly = false, debug = false) {
   }
 
   // add dummy nodes
-  var gDummy = addDummySourceNode(clone(g), null, e => {
-    e.props = { w: 0 };
+  var gDummy = addDummySourceNode(cloneTopology(g), null, e => {
+    e.w = 0;
   });
 
   if (debug) {
@@ -460,17 +428,18 @@ function apspJohnson(g, minDisOnly = false, debug = false) {
   if (nodeWeights == null) {
     return null; // negative cycle detected
   }
+  gDummy = null; // to allow memory release
 
   if (debug) {
     console.log('apspJohnson: re-weighting each edge ...');
   }
 
   // re-weight each edge and make it non-negative
-  var gRW = clone(g),
+  var gRW = cloneTopology(g),
     i;
   for (i = 0; i < gRW.es.length; i++) {
     var edge = gRW.es[i];
-    edge.props.w = edge.props.w + nodeWeights[edge.source] - nodeWeights[edge.target];
+    edge.w = edge.w + nodeWeights[edge.source] - nodeWeights[edge.target];
   }
 
   if (debug) {
@@ -505,7 +474,7 @@ function apspJohnson(g, minDisOnly = false, debug = false) {
 function sumOfEdgeWeight(g, eidices) {
   var sum = 0;
   for (var i = 0; i < eidices.length; i++) {
-    sum += g.es[eidices[i]].props.w;
+    sum += g.es[eidices[i]].w;
   }
   return sum;
 }

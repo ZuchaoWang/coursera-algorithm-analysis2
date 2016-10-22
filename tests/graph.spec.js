@@ -15,17 +15,17 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: false,
         ns: [
-          { idx: 0, nbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }] },
-          { idx: 1, nbs: [{ nidx: 0, eidx: 0 }, { nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }] },
-          { idx: 2, nbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }, { nidx: 3, eidx: 4 }] },
-          { idx: 3, nbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
+          { idx: 0, links: [0, 1] },
+          { idx: 1, links: [0, 2, 3] },
+          { idx: 2, links: [1, 2, 4] },
+          { idx: 3, links: [3, 4] }
         ],
         es: [
-          { idx: 0, source: 0, target: 1, props: { w: 1 } },
-          { idx: 1, source: 0, target: 2, props: { w: 1 } },
-          { idx: 2, source: 1, target: 2, props: { w: 1 } },
-          { idx: 3, source: 1, target: 3, props: { w: 1 } },
-          { idx: 4, source: 2, target: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, w: 1 },
+          { idx: 1, source: 0, target: 2, w: 1 },
+          { idx: 2, source: 1, target: 2, w: 1 },
+          { idx: 3, source: 1, target: 3, w: 1 },
+          { idx: 4, source: 2, target: 3, w: 1 }
         ]
       });
     });
@@ -43,17 +43,17 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: false,
         ns: [
-          { idx: 0, nbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }] },
-          { idx: 1, nbs: [{ nidx: 0, eidx: 0 }, { nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }] },
-          { idx: 2, nbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }, { nidx: 3, eidx: 4 }] },
-          { idx: 3, nbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
+          { idx: 0, links: [0, 1] },
+          { idx: 1, links: [0, 2, 3] },
+          { idx: 2, links: [1, 2, 4] },
+          { idx: 3, links: [3, 4] }
         ],
         es: [
-          { idx: 0, source: 0, target: 1, props: { w: 1 } },
-          { idx: 1, source: 0, target: 2, props: { w: 2 } },
-          { idx: 2, source: 1, target: 2, props: { w: 3 } },
-          { idx: 3, source: 1, target: 3, props: { w: 2 } },
-          { idx: 4, source: 2, target: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, w: 1 },
+          { idx: 1, source: 0, target: 2, w: 2 },
+          { idx: 2, source: 1, target: 2, w: 3 },
+          { idx: 3, source: 1, target: 3, w: 2 },
+          { idx: 4, source: 2, target: 3, w: 1 }
         ]
       });
     });
@@ -71,17 +71,17 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: true,
         ns: [
-          { idx: 0, outnbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }] },
-          { idx: 1, outnbs: [{ nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }] },
-          { idx: 2, outnbs: [{ nidx: 3, eidx: 4 }] },
-          { idx: 3, outnbs: [] }
+          { idx: 0, olinks: [0, 1] },
+          { idx: 1, olinks: [2, 3] },
+          { idx: 2, olinks: [4] },
+          { idx: 3, olinks: [] }
         ],
         es: [
-          { idx: 0, source: 0, target: 1, props: { w: 1 } },
-          { idx: 1, source: 0, target: 2, props: { w: 1 } },
-          { idx: 2, source: 1, target: 2, props: { w: 1 } },
-          { idx: 3, source: 1, target: 3, props: { w: 1 } },
-          { idx: 4, source: 2, target: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, w: 1 },
+          { idx: 1, source: 0, target: 2, w: 1 },
+          { idx: 2, source: 1, target: 2, w: 1 },
+          { idx: 3, source: 1, target: 3, w: 1 },
+          { idx: 4, source: 2, target: 3, w: 1 }
         ]
       });
     });
@@ -102,17 +102,17 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: true,
         ns: [
-          { idx: 0, outnbs: [] },
-          { idx: 1, outnbs: [{ nidx: 0, eidx: 0 }] },
-          { idx: 2, outnbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }] },
-          { idx: 3, outnbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
+          { idx: 0, olinks: [] },
+          { idx: 1, olinks: [0] },
+          { idx: 2, olinks: [1, 2] },
+          { idx: 3, olinks: [3, 4] }
         ],
         es: [
-          { idx: 0, source: 1, target: 0, props: { w: 1 } },
-          { idx: 1, source: 2, target: 0, props: { w: 2 } },
-          { idx: 2, source: 2, target: 1, props: { w: 3 } },
-          { idx: 3, source: 3, target: 1, props: { w: 2 } },
-          { idx: 4, source: 3, target: 2, props: { w: 1 } }
+          { idx: 0, source: 1, target: 0, w: 1 },
+          { idx: 1, source: 2, target: 0, w: 2 },
+          { idx: 2, source: 2, target: 1, w: 3 },
+          { idx: 3, source: 3, target: 1, w: 2 },
+          { idx: 4, source: 3, target: 2, w: 1 }
         ]
       });
     });
