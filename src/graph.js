@@ -28,7 +28,7 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   var ns = new Array(nn);
   for (i = 0; i < nn; i++) {
     if (directed) {
-      ns[i] = { idx: i, innbs: [], outnbs: [] };
+      ns[i] = { idx: i, outnbs: [] };
     } else {
       ns[i] = { idx: i, nbs: [] };
     }
@@ -45,10 +45,6 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
     if (directed) {
       ns[wedges[i].source].outnbs.push({
         nidx: wedges[i].target,
-        eidx: i
-      });
-      ns[wedges[i].target].innbs.push({
-        nidx: wedges[i].source,
         eidx: i
       });
     } else {
@@ -70,38 +66,46 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   };
 }
 
-function addDummySourceNode(g, props) {
+function addDummySourceNode(g, nFunc, eFunc) {
   var nn = g.ns.length,
     en = g.es.length,
+    node,
+    edge,
     i;
 
   if (g.directed) {
-    g.ns.push({
+    node = {
       idx: nn,
-      innbs: [],
       outnbs: []
-    });
+    };
+    if (nFunc) {
+      nFunc(node);
+    }
+    g.ns.push(node);
     for (i = 0; i < nn; i++) {
       g.ns[nn].outnbs.push({
         nidx: i,
         eidx: en + i
       });
-      g.ns[i].innbs.push({
-        nidx: nn,
-        eidx: en + i
-      });
-      g.es.push({
+      edge = {
         idx: en + i,
         source: nn,
-        target: i,
-        props: Object.assign({}, props)
-      });
+        target: i
+      };
+      if (eFunc) {
+        eFunc(edge);
+      }
+      g.es.push(edge);
     }
   } else {
-    g.ns.push({
+    node = {
       idx: nn,
       nbs: []
-    });
+    };
+    if (nFunc) {
+      nFunc(node);
+    }
+    g.ns.push(node);
     for (i = 0; i < nn; i++) {
       g.ns[nn].nbs.push({
         nidx: i,
@@ -111,12 +115,15 @@ function addDummySourceNode(g, props) {
         nidx: nn,
         eidx: en + i
       });
-      g.es.push({
+      edge = {
         idx: en + i,
         source: nn,
-        target: i,
-        props: Object.assign({}, props)
-      });
+        target: i
+      };
+      if (eFunc) {
+        eFunc(edge);
+      }
+      g.es.push(edge);
     }
   }
 
@@ -132,17 +139,11 @@ function clone(g) {
 
   if (g.directed) {
     for (i = 0; i < nn; i++) {
-      ns[i] = { idx: i, innbs: [], outnbs: [] };
+      ns[i] = { idx: i, outnbs: [] };
       for (j = 0; j < g.ns[i].outnbs.length; j++) {
         ns[i].outnbs.push({
           nidx: g.ns[i].outnbs[j].nidx,
           eidx: g.ns[i].outnbs[j].eidx
-        });
-      }
-      for (j = 0; j < g.ns[i].innbs.length; j++) {
-        ns[i].innbs.push({
-          nidx: g.ns[i].innbs[j].nidx,
-          eidx: g.ns[i].innbs[j].eidx
         });
       }
     }
@@ -181,14 +182,17 @@ function reverse(g) {
 
   var nn = g.ns.length,
     en = g.es.length,
+    edge,
     i;
 
   for (i = 0; i < nn; i++) {
-    [g.ns[i].innbs, g.ns[i].outnbs] = [g.ns[i].outnbs, g.ns[i].innbs];
+    g.ns[i].outnbs = [];
   }
 
   for (i = 0; i < en; i++) {
-    [g.es[i].source, g.es[i].target] = [g.es[i].target, g.es[i].source];
+    edge = g.es[i];
+    [edge.source, edge.target] = [edge.target, edge.source];
+    g.ns[edge.source].outnbs.push({ nidx: edge.target, eidx: i });
   }
 
   return g;
@@ -442,7 +446,9 @@ function apspJohnson(g, minDisOnly = false, debug = false) {
   }
 
   // add dummy nodes
-  var gDummy = addDummySourceNode(clone(g), { w: 0 });
+  var gDummy = addDummySourceNode(clone(g), null, e => {
+    e.props = { w: 0 };
+  });
 
   if (debug) {
     console.log('apspJohnson: calculating node weight ...');

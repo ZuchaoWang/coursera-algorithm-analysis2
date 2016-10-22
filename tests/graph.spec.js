@@ -71,10 +71,10 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: true,
         ns: [
-          { idx: 0, innbs: [], outnbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }] },
-          { idx: 1, innbs: [{ nidx: 0, eidx: 0 }], outnbs: [{ nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }] },
-          { idx: 2, innbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }], outnbs: [{ nidx: 3, eidx: 4 }] },
-          { idx: 3, innbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }], outnbs: [] }
+          { idx: 0, outnbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }] },
+          { idx: 1, outnbs: [{ nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }] },
+          { idx: 2, outnbs: [{ nidx: 3, eidx: 4 }] },
+          { idx: 3, outnbs: [] }
         ],
         es: [
           { idx: 0, source: 0, target: 1, props: { w: 1 } },
@@ -102,10 +102,10 @@ describe('graph', () => {
       expect(_testOne(d.g1)).toEqual({
         directed: true,
         ns: [
-          { idx: 0, innbs: [{ nidx: 1, eidx: 0 }, { nidx: 2, eidx: 1 }], outnbs: [] },
-          { idx: 1, innbs: [{ nidx: 2, eidx: 2 }, { nidx: 3, eidx: 3 }], outnbs: [{ nidx: 0, eidx: 0 }] },
-          { idx: 2, innbs: [{ nidx: 3, eidx: 4 }], outnbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }] },
-          { idx: 3, innbs: [], outnbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
+          { idx: 0, outnbs: [] },
+          { idx: 1, outnbs: [{ nidx: 0, eidx: 0 }] },
+          { idx: 2, outnbs: [{ nidx: 0, eidx: 1 }, { nidx: 1, eidx: 2 }] },
+          { idx: 3, outnbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
         ],
         es: [
           { idx: 0, source: 1, target: 0, props: { w: 1 } },
