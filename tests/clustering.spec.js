@@ -4,24 +4,24 @@ import Clustering from '../src/clustering';
 describe('clustering', () => {
   describe('max spacing', () => {
     var g1 = [
-        { from: 0, to: 1, w: 100 },
-        { from: 0, to: 2, w: 50 },
-        { from: 2, to: 3, w: 7 },
-        { from: 3, to: 5, w: 2 },
-        { from: 4, to: 5, w: 1 },
-        { from: 3, to: 4, w: 3 }
+        { source: 0, target: 1, w: 100 },
+        { source: 0, target: 2, w: 50 },
+        { source: 2, target: 3, w: 7 },
+        { source: 3, target: 5, w: 2 },
+        { source: 4, target: 5, w: 1 },
+        { source: 3, target: 4, w: 3 }
       ],
       g2 = [
-        { from: 0, to: 1, w: 1 },
-        { from: 0, to: 2, w: 2 },
-        { from: 0, to: 3, w: 3 },
-        { from: 0, to: 4, w: 4 },
-        { from: 1, to: 2, w: 5 },
-        { from: 1, to: 3, w: 6 },
-        { from: 1, to: 4, w: 7 },
-        { from: 2, to: 3, w: 8 },
-        { from: 2, to: 4, w: 9 },
-        { from: 3, to: 4, w: 10 }
+        { source: 0, target: 1, w: 1 },
+        { source: 0, target: 2, w: 2 },
+        { source: 0, target: 3, w: 3 },
+        { source: 0, target: 4, w: 4 },
+        { source: 1, target: 2, w: 5 },
+        { source: 1, target: 3, w: 6 },
+        { source: 1, target: 4, w: 7 },
+        { source: 2, target: 3, w: 8 },
+        { source: 2, target: 4, w: 9 },
+        { source: 3, target: 4, w: 10 }
       ];
 
     it('should be correct', () => {

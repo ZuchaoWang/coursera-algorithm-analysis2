@@ -21,8 +21,8 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   var nn = 0,
     i;
   for (i = 0; i < wedges.length; i++) {
-    nn = Math.max(nn, wedges[i].from + 1);
-    nn = Math.max(nn, wedges[i].to + 1);
+    nn = Math.max(nn, wedges[i].source + 1);
+    nn = Math.max(nn, wedges[i].target + 1);
   }
 
   var ns = new Array(nn);
@@ -38,26 +38,26 @@ function makeGraphFromEdges(wedges, directed = false, weighted = false) {
   for (i = 0; i < wedges.length; i++) {
     es[i] = {
       idx: i,
-      from: wedges[i].from,
-      to: wedges[i].to,
+      source: wedges[i].source,
+      target: wedges[i].target,
       props: weighted ? { w: wedges[i].w } : { w: 1 }
     };
     if (directed) {
-      ns[wedges[i].from].outnbs.push({
-        nidx: wedges[i].to,
+      ns[wedges[i].source].outnbs.push({
+        nidx: wedges[i].target,
         eidx: i
       });
-      ns[wedges[i].to].innbs.push({
-        nidx: wedges[i].from,
+      ns[wedges[i].target].innbs.push({
+        nidx: wedges[i].source,
         eidx: i
       });
     } else {
-      ns[wedges[i].from].nbs.push({
-        nidx: wedges[i].to,
+      ns[wedges[i].source].nbs.push({
+        nidx: wedges[i].target,
         eidx: i
       });
-      ns[wedges[i].to].nbs.push({
-        nidx: wedges[i].from,
+      ns[wedges[i].target].nbs.push({
+        nidx: wedges[i].source,
         eidx: i
       });
     }
@@ -92,8 +92,8 @@ function addDummySourceNode(g, props) {
       });
       g.es.push({
         idx: en + i,
-        from: nn,
-        to: i,
+        source: nn,
+        target: i,
         props: Object.assign({}, props)
       });
     }
@@ -113,8 +113,8 @@ function addDummySourceNode(g, props) {
       });
       g.es.push({
         idx: en + i,
-        from: nn,
-        to: i,
+        source: nn,
+        target: i,
         props: Object.assign({}, props)
       });
     }
@@ -161,8 +161,8 @@ function clone(g) {
   for (i = 0; i < en; i++) {
     es[i] = {
       idx: i,
-      from: g.es[i].from,
-      to: g.es[i].to,
+      source: g.es[i].source,
+      target: g.es[i].target,
       props: Object.assign({}, g.es[i].props) // props will be shallow copy
     };
   }
@@ -188,7 +188,7 @@ function reverse(g) {
   }
 
   for (i = 0; i < en; i++) {
-    [g.es[i].from, g.es[i].to] = [g.es[i].to, g.es[i].from];
+    [g.es[i].source, g.es[i].target] = [g.es[i].target, g.es[i].source];
   }
 
   return g;
@@ -309,7 +309,7 @@ function mstPrim(g) {
         nextNidx = nb.nidx,
         nextEidx = nb.eidx;
 
-      // restrict to neighbours that are not added
+      // restrict target neighbours that are not added
       if (!nadded.has(nextNidx)) {
         if (nfrontier.hasKey(nextNidx)) {
           var prevElem = nfrontier.getKey(nextNidx);
@@ -335,10 +335,10 @@ function mstKruskal(g) {
   var eadded = [];
   for (var i = 0; i < eSorted.length; i++) {
     var e = eSorted[i],
-      fromRoot = UnionFind.find(uf, e.from),
-      toRoot = UnionFind.find(uf, e.to);
-    if (fromRoot !== toRoot) {
-      UnionFind.union(uf, e.from, e.to);
+      sourceRoot = UnionFind.find(uf, e.source),
+      targetRoot = UnionFind.find(uf, e.target);
+    if (sourceRoot !== targetRoot) {
+      UnionFind.union(uf, e.source, e.target);
       eadded.push(e.idx);
     }
   }
@@ -360,7 +360,7 @@ function ssspDijkstra(g, s) {
   while (firstNode || nfrontier.size() > 0) {
     var minNidx;
     if (firstNode) {
-      // start from s
+      // start source s
       firstNode = false;
       minNidx = s;
       disArray[minNidx] = 0;
@@ -464,14 +464,14 @@ function apspJohnson(g, minDisOnly = false, debug = false) {
     i;
   for (i = 0; i < gRW.es.length; i++) {
     var edge = gRW.es[i];
-    edge.props.w = edge.props.w + nodeWeights[edge.from] - nodeWeights[edge.to];
+    edge.props.w = edge.props.w + nodeWeights[edge.source] - nodeWeights[edge.target];
   }
 
   if (debug) {
     console.log('apspJohnson: runing dijkstra for each source ...');
   }
 
-  // run dijkstra for each source and restore path length
+  // run dijkstra for each source and restargetre path length
   var disMatrix = new Array(nn),
     minDis = null,
     j;

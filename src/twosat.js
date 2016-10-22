@@ -26,8 +26,8 @@ function twoSatArray2Graph(twoSatArray) {
 
   var edges = [];
   for (let [vidx1, vidx2] of twoSatArray) {
-    edges.push({ from: vidx2nidx(-vidx1, vn), to: vidx2nidx(vidx2, vn) });
-    edges.push({ from: vidx2nidx(-vidx2, vn), to: vidx2nidx(vidx1, vn) });
+    edges.push({ source: vidx2nidx(-vidx1, vn), target: vidx2nidx(vidx2, vn) });
+    edges.push({ source: vidx2nidx(-vidx2, vn), target: vidx2nidx(vidx1, vn) });
   }
 
   return Graph.makeGraphFromEdges(edges, true, false);

@@ -21,11 +21,11 @@ describe('graph', () => {
           { idx: 3, nbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
         ],
         es: [
-          { idx: 0, from: 0, to: 1, props: { w: 1 } },
-          { idx: 1, from: 0, to: 2, props: { w: 1 } },
-          { idx: 2, from: 1, to: 2, props: { w: 1 } },
-          { idx: 3, from: 1, to: 3, props: { w: 1 } },
-          { idx: 4, from: 2, to: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, props: { w: 1 } },
+          { idx: 1, source: 0, target: 2, props: { w: 1 } },
+          { idx: 2, source: 1, target: 2, props: { w: 1 } },
+          { idx: 3, source: 1, target: 3, props: { w: 1 } },
+          { idx: 4, source: 2, target: 3, props: { w: 1 } }
         ]
       });
     });
@@ -49,11 +49,11 @@ describe('graph', () => {
           { idx: 3, nbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
         ],
         es: [
-          { idx: 0, from: 0, to: 1, props: { w: 1 } },
-          { idx: 1, from: 0, to: 2, props: { w: 2 } },
-          { idx: 2, from: 1, to: 2, props: { w: 3 } },
-          { idx: 3, from: 1, to: 3, props: { w: 2 } },
-          { idx: 4, from: 2, to: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, props: { w: 1 } },
+          { idx: 1, source: 0, target: 2, props: { w: 2 } },
+          { idx: 2, source: 1, target: 2, props: { w: 3 } },
+          { idx: 3, source: 1, target: 3, props: { w: 2 } },
+          { idx: 4, source: 2, target: 3, props: { w: 1 } }
         ]
       });
     });
@@ -77,11 +77,11 @@ describe('graph', () => {
           { idx: 3, innbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }], outnbs: [] }
         ],
         es: [
-          { idx: 0, from: 0, to: 1, props: { w: 1 } },
-          { idx: 1, from: 0, to: 2, props: { w: 1 } },
-          { idx: 2, from: 1, to: 2, props: { w: 1 } },
-          { idx: 3, from: 1, to: 3, props: { w: 1 } },
-          { idx: 4, from: 2, to: 3, props: { w: 1 } }
+          { idx: 0, source: 0, target: 1, props: { w: 1 } },
+          { idx: 1, source: 0, target: 2, props: { w: 1 } },
+          { idx: 2, source: 1, target: 2, props: { w: 1 } },
+          { idx: 3, source: 1, target: 3, props: { w: 1 } },
+          { idx: 4, source: 2, target: 3, props: { w: 1 } }
         ]
       });
     });
@@ -108,11 +108,11 @@ describe('graph', () => {
           { idx: 3, innbs: [], outnbs: [{ nidx: 1, eidx: 3 }, { nidx: 2, eidx: 4 }] }
         ],
         es: [
-          { idx: 0, from: 1, to: 0, props: { w: 1 } },
-          { idx: 1, from: 2, to: 0, props: { w: 2 } },
-          { idx: 2, from: 2, to: 1, props: { w: 3 } },
-          { idx: 3, from: 3, to: 1, props: { w: 2 } },
-          { idx: 4, from: 3, to: 2, props: { w: 1 } }
+          { idx: 0, source: 1, target: 0, props: { w: 1 } },
+          { idx: 1, source: 2, target: 0, props: { w: 2 } },
+          { idx: 2, source: 2, target: 1, props: { w: 3 } },
+          { idx: 3, source: 3, target: 1, props: { w: 2 } },
+          { idx: 4, source: 3, target: 2, props: { w: 1 } }
         ]
       });
     });
@@ -324,100 +324,100 @@ describe('graph', () => {
 function genTestData() {
   var g0 = [],
     g1 = [ // for scc, mst, sssp, apsp
-      { from: 0, to: 1, w: 1 },
-      { from: 0, to: 2, w: 2 },
-      { from: 1, to: 2, w: 3 },
-      { from: 1, to: 3, w: 2 },
-      { from: 2, to: 3, w: 1 }
+      { source: 0, target: 1, w: 1 },
+      { source: 0, target: 2, w: 2 },
+      { source: 1, target: 2, w: 3 },
+      { source: 1, target: 3, w: 2 },
+      { source: 2, target: 3, w: 1 }
     ],
     g2 = [ // for mst (positive)
-      { from: 0, to: 1, w: 2 },
-      { from: 0, to: 3, w: 6 },
-      { from: 1, to: 2, w: 3 },
-      { from: 1, to: 3, w: 8 },
-      { from: 1, to: 4, w: 5 },
-      { from: 2, to: 4, w: 7 },
-      { from: 3, to: 4, w: 9 }
+      { source: 0, target: 1, w: 2 },
+      { source: 0, target: 3, w: 6 },
+      { source: 1, target: 2, w: 3 },
+      { source: 1, target: 3, w: 8 },
+      { source: 1, target: 4, w: 5 },
+      { source: 2, target: 4, w: 7 },
+      { source: 3, target: 4, w: 9 }
     ],
     g3 = [ // for mst (negative)
-      { from: 2, to: 1, w: 98 },
-      { from: 4, to: 2, w: -60 },
-      { from: 0, to: 3, w: -98 },
-      { from: 0, to: 4, w: -42 },
-      { from: 4, to: 3, w: 8 },
-      { from: 1, to: 4, w: 83 },
-      { from: 2, to: 3, w: -61 },
-      { from: 2, to: 0, w: 60 },
-      { from: 1, to: 3, w: -17 },
-      { from: 1, to: 0, w: 79 }
+      { source: 2, target: 1, w: 98 },
+      { source: 4, target: 2, w: -60 },
+      { source: 0, target: 3, w: -98 },
+      { source: 0, target: 4, w: -42 },
+      { source: 4, target: 3, w: 8 },
+      { source: 1, target: 4, w: 83 },
+      { source: 2, target: 3, w: -61 },
+      { source: 2, target: 0, w: 60 },
+      { source: 1, target: 3, w: -17 },
+      { source: 1, target: 0, w: 79 }
     ],
     g4 = [ // for sssp
-      { from: 0, to: 1, w: 1 },
-      { from: 0, to: 7, w: 2 },
-      { from: 1, to: 0, w: 1 },
-      { from: 1, to: 2, w: 1 },
-      { from: 2, to: 1, w: 1 },
-      { from: 2, to: 3, w: 1 },
-      { from: 3, to: 2, w: 1 },
-      { from: 3, to: 4, w: 1 },
-      { from: 4, to: 3, w: 1 },
-      { from: 4, to: 5, w: 1 },
-      { from: 5, to: 4, w: 1 },
-      { from: 5, to: 6, w: 1 },
-      { from: 6, to: 5, w: 1 },
-      { from: 6, to: 7, w: 1 },
-      { from: 7, to: 6, w: 1 },
-      { from: 7, to: 0, w: 2 }
+      { source: 0, target: 1, w: 1 },
+      { source: 0, target: 7, w: 2 },
+      { source: 1, target: 0, w: 1 },
+      { source: 1, target: 2, w: 1 },
+      { source: 2, target: 1, w: 1 },
+      { source: 2, target: 3, w: 1 },
+      { source: 3, target: 2, w: 1 },
+      { source: 3, target: 4, w: 1 },
+      { source: 4, target: 3, w: 1 },
+      { source: 4, target: 5, w: 1 },
+      { source: 5, target: 4, w: 1 },
+      { source: 5, target: 6, w: 1 },
+      { source: 6, target: 5, w: 1 },
+      { source: 6, target: 7, w: 1 },
+      { source: 7, target: 6, w: 1 },
+      { source: 7, target: 0, w: 2 }
     ],
     g5 = [ // for scc, sssp, apsp (positive cycle)
-      { from: 0, to: 1, w: 8 },
-      { from: 1, to: 2, w: 1 },
-      { from: 2, to: 0, w: 1 },
-      { from: 0, to: 3, w: 6 },
-      { from: 3, to: 2, w: 2 }
+      { source: 0, target: 1, w: 8 },
+      { source: 1, target: 2, w: 1 },
+      { source: 2, target: 0, w: 1 },
+      { source: 0, target: 3, w: 6 },
+      { source: 3, target: 2, w: 2 }
     ],
     g6 = [ // for scc, sssp, apsp (negative cycle)
-      { from: 0, to: 1, w: -5 },
-      { from: 1, to: 2, w: 2 },
-      { from: 2, to: 0, w: 1 },
-      { from: 0, to: 3, w: 3 },
-      { from: 3, to: 2, w: -1 }
+      { source: 0, target: 1, w: -5 },
+      { source: 1, target: 2, w: 2 },
+      { source: 2, target: 0, w: 1 },
+      { source: 0, target: 3, w: 3 },
+      { source: 3, target: 2, w: -1 }
     ],
     g7 = [ // for sssp (negative tree)
-      { from: 0, to: 1, w: -5 },
-      { from: 0, to: 5, w: -10 },
-      { from: 1, to: 2, w: 1 },
-      { from: 2, to: 3, w: 1 },
-      { from: 3, to: 4, w: -10000 }
+      { source: 0, target: 1, w: -5 },
+      { source: 0, target: 5, w: -10 },
+      { source: 1, target: 2, w: 1 },
+      { source: 2, target: 3, w: 1 },
+      { source: 3, target: 4, w: -10000 }
     ],
     g8 = [ // for sssp, apsp (negative graph)
-      { from: 0, to: 3, w: 2 },
-      { from: 1, to: 2, w: 3 },
-      { from: 1, to: 0, w: 6 },
-      { from: 2, to: 0, w: 4 },
-      { from: 2, to: 3, w: 5 },
-      { from: 3, to: 1, w: -7 },
-      { from: 3, to: 2, w: -3 }
+      { source: 0, target: 3, w: 2 },
+      { source: 1, target: 2, w: 3 },
+      { source: 1, target: 0, w: 6 },
+      { source: 2, target: 0, w: 4 },
+      { source: 2, target: 3, w: 5 },
+      { source: 3, target: 1, w: -7 },
+      { source: 3, target: 2, w: -3 }
     ],
     g9 = [ // for scc
-      { from: 0, to: 1, w: 1 },
-      { from: 1, to: 2, w: 1 },
-      { from: 2, to: 0, w: 1 },
-      { from: 1, to: 3, w: 1 },
-      { from: 3, to: 4, w: 1 },
-      { from: 3, to: 6, w: 1 },
-      { from: 4, to: 5, w: 1 },
-      { from: 5, to: 6, w: 1 },
-      { from: 6, to: 4, w: 1 },
-      { from: 2, to: 7, w: 1 },
-      { from: 2, to: 10, w: 1 },
-      { from: 7, to: 6, w: 1 },
-      { from: 8, to: 5, w: 1 },
-      { from: 7, to: 8, w: 1 },
-      { from: 8, to: 9, w: 1 },
-      { from: 9, to: 10, w: 1 },
-      { from: 10, to: 7, w: 1 },
-      { from: 7, to: 9, w: 1 }
+      { source: 0, target: 1, w: 1 },
+      { source: 1, target: 2, w: 1 },
+      { source: 2, target: 0, w: 1 },
+      { source: 1, target: 3, w: 1 },
+      { source: 3, target: 4, w: 1 },
+      { source: 3, target: 6, w: 1 },
+      { source: 4, target: 5, w: 1 },
+      { source: 5, target: 6, w: 1 },
+      { source: 6, target: 4, w: 1 },
+      { source: 2, target: 7, w: 1 },
+      { source: 2, target: 10, w: 1 },
+      { source: 7, target: 6, w: 1 },
+      { source: 8, target: 5, w: 1 },
+      { source: 7, target: 8, w: 1 },
+      { source: 8, target: 9, w: 1 },
+      { source: 9, target: 10, w: 1 },
+      { source: 10, target: 7, w: 1 },
+      { source: 7, target: 9, w: 1 }
     ];
 
   return {
