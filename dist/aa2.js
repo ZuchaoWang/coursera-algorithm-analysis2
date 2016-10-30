@@ -127,7 +127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = {
 	  makeGraphFromEdges: makeGraphFromEdges,
 	  addDummySourceNode: addDummySourceNode,
-	  clone: clone,
+	  cloneTopology: cloneTopology,
 	  reverse: reverse,
 	  dfs: dfs,
 	  sccKosaraju: sccKosaraju,
@@ -147,16 +147,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var nn = 0,
 	      i;
 	  for (i = 0; i < wedges.length; i++) {
-	    nn = Math.max(nn, wedges[i].from + 1);
-	    nn = Math.max(nn, wedges[i].to + 1);
+	    nn = Math.max(nn, wedges[i].source + 1);
+	    nn = Math.max(nn, wedges[i].target + 1);
 	  }
 	
 	  var ns = new Array(nn);
 	  for (i = 0; i < nn; i++) {
 	    if (directed) {
-	      ns[i] = { idx: i, innbs: [], outnbs: [] };
+	      ns[i] = { idx: i, olinks: [] };
 	    } else {
-	      ns[i] = { idx: i, nbs: [] };
+	      ns[i] = { idx: i, links: [] };
 	    }
 	  }
 	
@@ -164,28 +164,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (i = 0; i < wedges.length; i++) {
 	    es[i] = {
 	      idx: i,
-	      from: wedges[i].from,
-	      to: wedges[i].to,
-	      props: weighted ? { w: wedges[i].w } : { w: 1 }
+	      source: wedges[i].source,
+	      target: wedges[i].target,
+	      w: weighted ? wedges[i].w : 1
 	    };
 	    if (directed) {
-	      ns[wedges[i].from].outnbs.push({
-	        nidx: wedges[i].to,
-	        eidx: i
-	      });
-	      ns[wedges[i].to].innbs.push({
-	        nidx: wedges[i].from,
-	        eidx: i
-	      });
+	      ns[wedges[i].source].olinks.push(i);
 	    } else {
-	      ns[wedges[i].from].nbs.push({
-	        nidx: wedges[i].to,
-	        eidx: i
-	      });
-	      ns[wedges[i].to].nbs.push({
-	        nidx: wedges[i].from,
-	        eidx: i
-	      });
+	      ns[wedges[i].source].links.push(i);
+	      ns[wedges[i].target].links.push(i);
 	    }
 	  }
 	
@@ -196,101 +183,84 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
-	function addDummySourceNode(g, props) {
+	function addDummySourceNode(g, nFunc, eFunc) {
 	  var nn = g.ns.length,
 	      en = g.es.length,
+	      node,
+	      edge,
 	      i;
 	
 	  if (g.directed) {
-	    g.ns.push({
+	    node = {
 	      idx: nn,
-	      innbs: [],
-	      outnbs: []
-	    });
+	      olinks: []
+	    };
+	    if (nFunc) {
+	      nFunc(node);
+	    }
+	    g.ns.push(node);
 	    for (i = 0; i < nn; i++) {
-	      g.ns[nn].outnbs.push({
-	        nidx: i,
-	        eidx: en + i
-	      });
-	      g.ns[i].innbs.push({
-	        nidx: nn,
-	        eidx: en + i
-	      });
-	      g.es.push({
+	      g.ns[nn].olinks.push(en + i);
+	      edge = {
 	        idx: en + i,
-	        from: nn,
-	        to: i,
-	        props: Object.assign({}, props)
-	      });
+	        source: nn,
+	        target: i
+	      };
+	      if (eFunc) {
+	        eFunc(edge);
+	      }
+	      g.es.push(edge);
 	    }
 	  } else {
-	    g.ns.push({
+	    node = {
 	      idx: nn,
-	      nbs: []
-	    });
+	      links: []
+	    };
+	    if (nFunc) {
+	      nFunc(node);
+	    }
+	    g.ns.push(node);
 	    for (i = 0; i < nn; i++) {
-	      g.ns[nn].nbs.push({
-	        nidx: i,
-	        eidx: en + i
-	      });
-	      g.ns[i].nbs.push({
-	        nidx: nn,
-	        eidx: en + i
-	      });
-	      g.es.push({
+	      g.ns[nn].links.push(en + i);
+	      g.ns[i].links.push(en + i);
+	      edge = {
 	        idx: en + i,
-	        from: nn,
-	        to: i,
-	        props: Object.assign({}, props)
-	      });
+	        source: nn,
+	        target: i
+	      };
+	      if (eFunc) {
+	        eFunc(edge);
+	      }
+	      g.es.push(edge);
 	    }
 	  }
 	
 	  return g;
 	}
 	
-	function clone(g) {
+	function cloneTopology(g) {
 	  var nn = g.ns.length,
 	      en = g.es.length,
 	      ns = new Array(nn),
 	      es = new Array(en),
-	      i,
-	      j;
+	      i;
 	
 	  if (g.directed) {
 	    for (i = 0; i < nn; i++) {
-	      ns[i] = { idx: i, innbs: [], outnbs: [] };
-	      for (j = 0; j < g.ns[i].outnbs.length; j++) {
-	        ns[i].outnbs.push({
-	          nidx: g.ns[i].outnbs[j].nidx,
-	          eidx: g.ns[i].outnbs[j].eidx
-	        });
-	      }
-	      for (j = 0; j < g.ns[i].innbs.length; j++) {
-	        ns[i].innbs.push({
-	          nidx: g.ns[i].innbs[j].nidx,
-	          eidx: g.ns[i].innbs[j].eidx
-	        });
-	      }
+	      ns[i] = { idx: i, olinks: g.ns[i].olinks.slice(0) };
 	    }
 	  } else {
 	    for (i = 0; i < nn; i++) {
-	      ns[i] = { idx: i, nbs: [] };
-	      for (j = 0; j < g.ns[i].nbs.length; j++) {
-	        ns[i].nbs.push({
-	          nidx: g.ns[i].nbs[j].nidx,
-	          eidx: g.ns[i].nbs[j].eidx
-	        });
-	      }
+	      ns[i] = { idx: i, links: g.ns[i].links.slice(0) };
 	    }
 	  }
 	
 	  for (i = 0; i < en; i++) {
 	    es[i] = {
 	      idx: i,
-	      from: g.es[i].from,
-	      to: g.es[i].to,
-	      props: Object.assign({}, g.es[i].props) // props will be shallow copy
+	      source: g.es[i].source,
+	      target: g.es[i].target,
+	      w: g.es[i].w
 	    };
 	  }
 	
@@ -308,18 +278,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  var nn = g.ns.length,
 	      en = g.es.length,
+	      edge,
 	      i;
 	
 	  for (i = 0; i < nn; i++) {
-	    var _ref = [g.ns[i].outnbs, g.ns[i].innbs];
-	    g.ns[i].innbs = _ref[0];
-	    g.ns[i].outnbs = _ref[1];
+	    g.ns[i].olinks = [];
 	  }
 	
 	  for (i = 0; i < en; i++) {
-	    var _ref2 = [g.es[i].to, g.es[i].from];
-	    g.es[i].from = _ref2[0];
-	    g.es[i].to = _ref2[1];
+	    edge = g.es[i];
+	    var _ref = [edge.target, edge.source];
+	    edge.source = _ref[0];
+	    edge.target = _ref[1];
+	
+	    g.ns[edge.source].olinks.push(i);
 	  }
 	
 	  return g;
@@ -327,7 +299,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function dfs(g, nOrder, cbLeader, cbPre, cbPost) {
 	  var nn = g.ns.length,
-	      anynbs = g.directed ? 'outnbs' : 'nbs',
+	      anylinks = g.directed ? 'olinks' : 'links',
 	      stack = [],
 	      visited = new Array(nn),
 	      i;
@@ -353,10 +325,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      stack.push({ cur: cur, nbChecked: 0 });
 	      while (stack.length) {
 	        var pc = stack.pop(),
-	            nnb = g.ns[pc.cur][anynbs].length,
+	            nl = g.ns[pc.cur][anylinks].length,
 	            j = pc.nbChecked;
-	        while (j < nnb) {
-	          var next = g.ns[pc.cur][anynbs][j].nidx;
+	        while (j < nl) {
+	          var nextLink = g.es[g.ns[pc.cur][anylinks][j]],
+	              next = nextLink.target === pc.cur ? nextLink.source : nextLink.target;
 	          if (!visited[next]) {
 	            stack.push({ cur: pc.cur, nbChecked: j + 1 });
 	            visited[next] = true;
@@ -368,7 +341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	          j++;
 	        }
-	        if (j === nnb) {
+	        if (j === nl) {
 	          if (cbPost) {
 	            cbPost(pc.cur);
 	          }
@@ -437,22 +410,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    // for all neighbours
-	    for (var i = 0; i < g.ns[minNidx].nbs.length; i++) {
-	      var nb = g.ns[minNidx].nbs[i],
-	          nextNidx = nb.nidx,
-	          nextEidx = nb.eidx;
+	    for (var i = 0; i < g.ns[minNidx].links.length; i++) {
+	      var nextEidx = g.ns[minNidx].links[i],
+	          nextNidx = g.es[nextEidx].target === minNidx ? g.es[nextEidx].source : g.es[nextEidx].target;
 	
-	      // restrict to neighbours that are not added
+	      // restrict target neighbours that are not added
 	      if (!nadded.has(nextNidx)) {
 	        if (nfrontier.hasKey(nextNidx)) {
 	          var prevElem = nfrontier.getKey(nextNidx);
-	          if (g.es[nextEidx].props.w < prevElem.w) {
-	            nfrontier.popKey(nextNidx);
-	            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
+	          if (g.es[nextEidx].w < prevElem.w) {
+	            nfrontier.deleteKey(nextNidx);
+	            nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].w });
 	          }
 	        } else {
 	          // previously unreachable
-	          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].props.w });
+	          nfrontier.push({ nidx: nextNidx, eidx: nextEidx, w: g.es[nextEidx].w });
 	        }
 	      }
 	    }
@@ -465,16 +437,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var nn = g.ns.length,
 	      uf = _unionfind2.default.init(nn),
 	      eSorted = g.es.slice(0).sort(function (a, b) {
-	    return a.props.w - b.props.w;
+	    return a.w - b.w;
 	  });
 	
 	  var eadded = [];
 	  for (var i = 0; i < eSorted.length; i++) {
 	    var e = eSorted[i],
-	        fromRoot = _unionfind2.default.find(uf, e.from),
-	        toRoot = _unionfind2.default.find(uf, e.to);
-	    if (fromRoot !== toRoot) {
-	      _unionfind2.default.union(uf, e.from, e.to);
+	        sourceRoot = _unionfind2.default.find(uf, e.source),
+	        targetRoot = _unionfind2.default.find(uf, e.target);
+	    if (sourceRoot !== targetRoot) {
+	      _unionfind2.default.union(uf, e.source, e.target);
 	      eadded.push(e.idx);
 	    }
 	  }
@@ -501,7 +473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  while (firstNode || nfrontier.size() > 0) {
 	    var minNidx;
 	    if (firstNode) {
-	      // start from s
+	      // start source s
 	      firstNode = false;
 	      minNidx = s;
 	      disArray[minNidx] = 0;
@@ -513,21 +485,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    // for all neighbours
-	    for (i = 0; i < g.ns[minNidx].outnbs.length; i++) {
-	      var outnb = g.ns[minNidx].outnbs[i],
-	          nextNidx = outnb.nidx,
-	          nextEidx = outnb.eidx;
+	    for (i = 0; i < g.ns[minNidx].olinks.length; i++) {
+	      var nextEidx = g.ns[minNidx].olinks[i],
+	          nextNidx = g.es[nextEidx].target === minNidx ? g.es[nextEidx].source : g.es[nextEidx].target;
 	
 	      if (disArray[nextNidx] == null) {
 	        // not done
 	        if (nfrontier.hasKey(nextNidx)) {
 	          var prevElem = nfrontier.getKey(nextNidx);
-	          if (disArray[minNidx] + g.es[nextEidx].props.w < prevElem.w) {
-	            nfrontier.popKey(nextNidx);
-	            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+	          if (disArray[minNidx] + g.es[nextEidx].w < prevElem.w) {
+	            nfrontier.deleteKey(nextNidx);
+	            nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].w });
 	          }
 	        } else {
-	          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].props.w });
+	          nfrontier.push({ nidx: nextNidx, w: disArray[minNidx] + g.es[nextEidx].w });
 	        }
 	      }
 	    }
@@ -556,12 +527,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    for (var curNidx = 0; curNidx < nn; curNidx++) {
 	      if (prevDisArray[curNidx] != null) {
 	        // for all neighbours
-	        for (var j = 0; j < g.ns[curNidx].outnbs.length; j++) {
-	          var outnb = g.ns[curNidx].outnbs[j],
-	              nextNidx = outnb.nidx,
-	              nextEidx = outnb.eidx;
-	          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].props.w < disArray[nextNidx]) {
-	            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].props.w;
+	        for (var j = 0; j < g.ns[curNidx].olinks.length; j++) {
+	          var nextEidx = g.ns[curNidx].olinks[j],
+	              nextNidx = g.es[nextEidx].target === curNidx ? g.es[nextEidx].source : g.es[nextEidx].target;
+	          if (disArray[nextNidx] == null || prevDisArray[curNidx] + g.es[nextEidx].w < disArray[nextNidx]) {
+	            disArray[nextNidx] = prevDisArray[curNidx] + g.es[nextEidx].w;
 	          }
 	        }
 	      }
@@ -589,7 +559,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	
 	  // add dummy nodes
-	  var gDummy = addDummySourceNode(clone(g), { w: 0 });
+	  var gDummy = addDummySourceNode(cloneTopology(g), null, function (e) {
+	    e.w = 0;
+	  });
 	
 	  if (debug) {
 	    console.log('apspJohnson: calculating node weight ...');
@@ -601,24 +573,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (nodeWeights == null) {
 	    return null; // negative cycle detected
 	  }
+	  gDummy = null; // to allow memory release
 	
 	  if (debug) {
 	    console.log('apspJohnson: re-weighting each edge ...');
 	  }
 	
 	  // re-weight each edge and make it non-negative
-	  var gRW = clone(g),
+	  var gRW = cloneTopology(g),
 	      i;
 	  for (i = 0; i < gRW.es.length; i++) {
 	    var edge = gRW.es[i];
-	    edge.props.w = edge.props.w + nodeWeights[edge.from] - nodeWeights[edge.to];
+	    edge.w = edge.w + nodeWeights[edge.source] - nodeWeights[edge.target];
 	  }
 	
 	  if (debug) {
 	    console.log('apspJohnson: runing dijkstra for each source ...');
 	  }
 	
-	  // run dijkstra for each source and restore path length
+	  // run dijkstra for each source and restargetre path length
 	  var disMatrix = new Array(nn),
 	      minDis = null,
 	      j;
@@ -646,7 +619,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function sumOfEdgeWeight(g, eidices) {
 	  var sum = 0;
 	  for (var i = 0; i < eidices.length; i++) {
-	    sum += g.es[eidices[i]].props.w;
+	    sum += g.es[eidices[i]].w;
 	  }
 	  return sum;
 	}
@@ -826,9 +799,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function maxSpacing(g, k) {
 	  var spte = _graph2.default.mstKruskal(g),
 	      eindices = spte.slice(0).sort(function (a, b) {
-	    return g.es[b].props.w - g.es[a].props.w;
+	    return g.es[b].w - g.es[a].w;
 	  });
-	  return g.es[eindices[k - 2]].props.w;
+	  return g.es[eindices[k - 2]].w;
 	}
 	
 	function bitcodeK2(bitcodeArr) {
@@ -990,14 +963,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return arr[0];
 	    }
 	  }, {
-	    key: 'popKey',
-	    value: function popKey(xkey) {
+	    key: 'deleteKey',
+	    value: function deleteKey(xkey) {
 	      var arr = this._arr,
 	          pos = this._pos,
 	          keyFunc = this._keyFunc;
 	
 	      if (!pos.has(xkey)) {
-	        throw new Error('heap popKey: key ' + xkey + ' does not exist');
+	        throw new Error('heap deleteKey: key ' + xkey + ' does not exist');
 	      } else {
 	        var cur = pos.get(xkey),
 	            last = arr.length - 1,
@@ -1335,6 +1308,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = {
+	  //  twoSatArray2Graph: twoSatArray2Graph,
 	  isSatisfiable: isSatisfiable
 	};
 	
@@ -1394,8 +1368,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var vidx1 = _step2$value[0];
 	      var vidx2 = _step2$value[1];
 	
-	      edges.push({ from: vidx2nidx(-vidx1, vn), to: vidx2nidx(vidx2, vn) });
-	      edges.push({ from: vidx2nidx(-vidx2, vn), to: vidx2nidx(vidx1, vn) });
+	      edges.push({ source: vidx2nidx(-vidx1, vn), target: vidx2nidx(vidx2, vn) });
+	      edges.push({ source: vidx2nidx(-vidx2, vn), target: vidx2nidx(vidx1, vn) });
 	    }
 	  } catch (err) {
 	    _didIteratorError2 = true;

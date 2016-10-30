@@ -1,7 +1,7 @@
 import Graph from './graph';
 
 export default {
-  twoSatArray2Graph: twoSatArray2Graph,
+//  twoSatArray2Graph: twoSatArray2Graph,
   isSatisfiable: isSatisfiable
 };
 
